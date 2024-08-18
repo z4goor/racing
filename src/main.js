@@ -12,7 +12,7 @@ startButton.addEventListener('click', function() {
         track.removeChild(car.element);
         car = null;
     }
-    car = new Car(15, 25, 'red');
+    car = new Car(15, 25, '#fcff2d');
 
     const trackRect = track.getBoundingClientRect();
     const centerX = (trackRect.width - car.width) / 2;
@@ -29,16 +29,16 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyW':
-            if (car) car.increaseSpeed(2);
+            if (car) car.increaseSpeed(0.5);
             break;
         case 'KeyA':
-            if (car) car.setRotationSpeed(-2);
+            if (car) car.setRotationSpeed(-3);
             break;
         case 'KeyS':
-            if (car) car.decreaseSpeed(2);
+            if (car) car.decreaseSpeed(0.75);
             break;
         case 'KeyD':
-            if (car) car.setRotationSpeed(2);
+            if (car) car.setRotationSpeed(3);
             break;
     }
 });

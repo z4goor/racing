@@ -1,5 +1,13 @@
+body {
+    background-color: #21272A; /* Light grey background for the entire page */
+    color: #333; /* Dark grey text color for better readability */
+    font-family: Arial, sans-serif; /* Optional: Set a clean font for the page */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove default padding */
+}
+
 #track {
-    background-color: aquamarine;
+    background-color: lightblue;
     width: 700px;
     height: 500px;
 }
