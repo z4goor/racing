@@ -2,10 +2,17 @@ import { Car } from "./car.js";
 
 let car;
 let keysPressed = {};
+let trackConfig;
+
+fetch('../config.json')
+    .then(response => response.json())
+    .then(data => {
+        trackConfig = data;
+    });
 
 const startButton = document.getElementById('startButton');
-const removeButton = document.getElementById('removeButton');
 const track = document.getElementById('track');
+track.style.backgroundImage = "url('../track001.png')";
 
 startButton.addEventListener('click', function() {
     if (car) {
@@ -15,12 +22,10 @@ startButton.addEventListener('click', function() {
     car = new Car(15, 25, '#fcff2d');
 
     const trackRect = track.getBoundingClientRect();
-    const centerX = (trackRect.width - car.width) / 2;
-    const centerY = (trackRect.height - car.height) / 2;
 
-    car.setPosition(centerX, centerY);
+    car.setPosition(trackConfig.startPoint.x, trackConfig.startPoint.y);
     car.addToTrack(track);
-    car.setRotation(0);
+    car.setRotation(trackConfig.startPoint.rotation);
     car.setRotationSpeed(0);
 });
 
