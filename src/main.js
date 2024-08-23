@@ -53,13 +53,13 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyW':
-            if (car) car.increaseSpeed(0.4);
+            if (car) car.increaseSpeed(0.3);
             break;
         case 'KeyA':
             if (car) car.setRotationSpeed(-4);
             break;
         case 'KeyS':
-            if (car) car.decreaseSpeed(0.75);
+            if (car) car.decreaseSpeed(0.6);
             break;
         case 'KeyD':
             if (car) car.setRotationSpeed(4);

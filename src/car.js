@@ -41,7 +41,11 @@ export class Car {
     }
 
     decreaseSpeed(amount) {
-        this.speed = Math.max(0, this.speed - amount);
+        if (this.speed > 0) {
+            this.speed = Math.max(0, this.speed - amount);
+        } else {
+            this.speed -= amount;
+        }
     }
 
     setRotation(degrees) {
@@ -100,7 +104,6 @@ export class Car {
     }
 
     calculateCorners() {
-        // width = this.width * 0.5;
         const topLeft = {
             x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
             y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
