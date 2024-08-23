@@ -4,7 +4,7 @@ let car;
 let keysPressed = {};
 let trackConfig;
 
-fetch('../config.json')
+fetch('./config.json')
     .then(response => response.json())
     .then(data => {
         trackConfig = data;
@@ -12,20 +12,39 @@ fetch('../config.json')
 
 const startButton = document.getElementById('startButton');
 const track = document.getElementById('track');
-track.style.backgroundImage = "url('../track001.png')";
+track.style.backgroundImage = "url('./track001.png')";
+
+const canvas = document.createElement('canvas');
+canvas.width = track.clientWidth;
+canvas.height = track.clientHeight;
+track.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+
+const trackImage = new Image();
+trackImage.src = './track001.png';
+trackImage.onload = function () {
+    ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
+};
 
 startButton.addEventListener('click', function() {
+    if (!trackConfig) {
+        console.error('Track configuration not loaded.');
+        return;
+    }
+
     if (car) {
         track.removeChild(car.element);
         car = null;
     }
-    car = new Car(15, 25, '#fcff2d');
 
-    const trackRect = track.getBoundingClientRect();
+    car = new Car(15, 25, 0, '#fcff2d');
 
-    car.setPosition(trackConfig.startPoint.x, trackConfig.startPoint.y);
+    if (trackConfig.startPoint) {
+        car.setPosition(trackConfig.startPoint.x, trackConfig.startPoint.y);
+        car.setRotation(trackConfig.startPoint.rotation);
+    }
+
     car.addToTrack(track);
-    car.setRotation(trackConfig.startPoint.rotation);
     car.setRotationSpeed(0);
 });
 
@@ -34,16 +53,16 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyW':
-            if (car) car.increaseSpeed(0.5);
+            if (car) car.increaseSpeed(0.4);
             break;
         case 'KeyA':
-            if (car) car.setRotationSpeed(-3);
+            if (car) car.setRotationSpeed(-4);
             break;
         case 'KeyS':
             if (car) car.decreaseSpeed(0.75);
             break;
         case 'KeyD':
-            if (car) car.setRotationSpeed(3);
+            if (car) car.setRotationSpeed(4);
             break;
     }
 });
@@ -58,7 +77,7 @@ document.addEventListener('keyup', event => {
 
 function update() {
     if (car) {
-        car.move();
+        car.move(ctx);
 
         if (car.speed > 0) {
             car.rotate();
