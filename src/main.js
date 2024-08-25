@@ -33,7 +33,6 @@ trackImage.onload = function () {
 };
 
 fastestLap = getFastestLap();
-console.log('onStart fastest lap: ' + fastestLap);
 saveFastestLap(fastestLap);
 
 lineCrossing = [];
@@ -74,13 +73,13 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyW':
-            if (car) car.increaseSpeed(0.3);
+            if (car) car.increaseSpeed(0.6);
             break;
         case 'KeyA':
             if (car) car.setRotationSpeed(-4);
             break;
         case 'KeyS':
-            if (car) car.decreaseSpeed(0.6);
+            if (car) car.decreaseSpeed(0.9);
             break;
         case 'KeyD':
             if (car) car.setRotationSpeed(4);
@@ -104,9 +103,8 @@ function getFastestLap() {
 }
 
 function saveFastestLap(time) {
-    console.log('saving fastestLap'),
     localStorage.setItem('fastestLap', time);
-    if (time != null) {
+    if (time != null || !isNaN(time)) {
         const minutes = Math.floor(time / 60000);
         const seconds = Math.floor((time % 60000) / 1000);
         const milliseconds = time % 1000;
@@ -161,13 +159,7 @@ function update() {
                 
                 if (timerStarted) {
                     const elapsedTime = Date.now() - startTime;
-                    const minutes = Math.floor(elapsedTime / 60000);
-                    const seconds = Math.floor((elapsedTime % 60000) / 1000);
-                    const milliseconds = elapsedTime % 1000;
-                    console.log(`Lap time: ${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`);
-                    console.log('elapsed time: ' + elapsedTime + ' fastest time: ' + fastestLap);
                     if (fastestLap == null || elapsedTime < fastestLap) {
-                        console.log('new fastest lap');
                         saveFastestLap(elapsedTime);
                     }
                     startTime = Date.now();
