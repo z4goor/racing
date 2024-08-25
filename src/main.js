@@ -76,13 +76,13 @@ document.addEventListener('keydown', event => {
             if (car) car.increaseSpeed(0.6);
             break;
         case 'KeyA':
-            if (car) car.setRotationSpeed(-4);
+            if (car) car.setRotationSpeed(-2);
             break;
         case 'KeyS':
-            if (car) car.decreaseSpeed(0.9);
+            if (car) car.decreaseSpeed(1);
             break;
         case 'KeyD':
-            if (car) car.setRotationSpeed(4);
+            if (car) car.setRotationSpeed(2);
             break;
         case 'Space':
             car.x -= 200;
@@ -163,6 +163,9 @@ function isMovingTowardsLine(car, line) {
 }
 
 function update() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
+
     if (car) {
         car.move(ctx);
 
@@ -177,6 +180,8 @@ function update() {
             { p1: corners[2], p2: corners[3] },
             { p1: corners[3], p2: corners[0] }
         ];
+
+        car.getSensorDistances(ctx, 150);
 
         const hasCrossedLine = carEdges.some(edge => linesIntersect(edge, startLine));
         const movingTowardsLine = isMovingTowardsLine(car, startLine);
