@@ -7,6 +7,7 @@ let startLine;
 let lineCrossing;
 let timerStarted = false;
 let startTime;
+let fastestLap;
 
 fetch('./config.json')
     .then(response => response.json())
@@ -15,6 +16,7 @@ fetch('./config.json')
     });
 
 const startButton = document.getElementById('startButton');
+const resetButton = document.getElementById('resetFastestLapButton');
 const track = document.getElementById('track');
 track.style.backgroundImage = "url('./track001.png')";
 
@@ -30,6 +32,10 @@ trackImage.onload = function () {
     ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
 };
 
+fastestLap = getFastestLap();
+console.log('onStart fastest lap: ' + fastestLap);
+saveFastestLap(fastestLap);
+
 lineCrossing = [];
 
 startButton.addEventListener('click', function() {
@@ -40,7 +46,7 @@ startButton.addEventListener('click', function() {
 
     startLine = trackConfig.startLine;
     timerStarted = false;
-    document.getElementById('elapsed-time').textContent = '0:00.000';
+    setCurrentTime(0, 0, 0);
 
     if (car) {
         track.removeChild(car.element);
@@ -56,6 +62,11 @@ startButton.addEventListener('click', function() {
 
     car.addToTrack(track);
     car.setRotationSpeed(0);
+});
+
+resetButton.addEventListener('click', function() {
+    localStorage.removeItem('fastestLap');
+    saveFastestLap(Math.inf);
 });
 
 document.addEventListener('keydown', event => {
@@ -74,6 +85,9 @@ document.addEventListener('keydown', event => {
         case 'KeyD':
             if (car) car.setRotationSpeed(4);
             break;
+        case 'Space':
+            car.x -= 200;
+            break;
     }
 });
 
@@ -85,6 +99,28 @@ document.addEventListener('keyup', event => {
     }
 });
 
+function getFastestLap() {
+    return localStorage.getItem('fastestLap');
+}
+
+function saveFastestLap(time) {
+    console.log('saving fastestLap'),
+    localStorage.setItem('fastestLap', time);
+    if (time != null) {
+        const minutes = Math.floor(time / 60000);
+        const seconds = Math.floor((time % 60000) / 1000);
+        const milliseconds = time % 1000;
+        document.getElementById('fastest-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+    } else {
+        document.getElementById('fastest-time').textContent = `0:00.000`;
+    }
+    fastestLap = time;
+}
+
+function setCurrentTime(min, sec, ms) {
+    document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+}
+
 function linesIntersect(line1, line2) {
     const { p1, p2 } = line1;
     const { p1: q1, p2: q2 } = line2;
@@ -92,7 +128,7 @@ function linesIntersect(line1, line2) {
     const det = (p2.x - p1.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q2.x - q1.x);
 
     if (det === 0) {
-        return false; // Lines are parallel
+        return false;
     }
 
     const lambda = ((q2.y - q1.y) * (q2.x - p1.x) + (q1.x - q2.x) * (q2.y - p1.y)) / det;
@@ -112,32 +148,34 @@ function update() {
 
         const corners = car.corners;
         const carEdges = [
-            { p1: corners[0], p2: corners[1] }, // Top edge
-            { p1: corners[1], p2: corners[2] }, // Right edge
-            { p1: corners[2], p2: corners[3] }, // Bottom edge
-            { p1: corners[3], p2: corners[0] }  // Left edge
+            { p1: corners[0], p2: corners[1] },
+            { p1: corners[1], p2: corners[2] },
+            { p1: corners[2], p2: corners[3] },
+            { p1: corners[3], p2: corners[0] }
         ];
 
         const hasCrossedLine = carEdges.some(edge => linesIntersect(edge, startLine));
-
         if (hasCrossedLine) {
             if (!lineCrossing.includes(car)) {
-                console.log("Car crossed the start/finish line!");
                 lineCrossing.push(car);
-
-                if (!timerStarted) {
-                    startTime = Date.now();
-                    timerStarted = true;
-                    console.log("Timer started!");
-                } else {
+                
+                if (timerStarted) {
                     const elapsedTime = Date.now() - startTime;
                     const minutes = Math.floor(elapsedTime / 60000);
                     const seconds = Math.floor((elapsedTime % 60000) / 1000);
                     const milliseconds = elapsedTime % 1000;
                     console.log(`Lap time: ${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`);
+                    console.log('elapsed time: ' + elapsedTime + ' fastest time: ' + fastestLap);
+                    if (fastestLap == null || elapsedTime < fastestLap) {
+                        console.log('new fastest lap');
+                        saveFastestLap(elapsedTime);
+                    }
+                    startTime = Date.now();
+                } else {
+                    timerStarted = true;
                     startTime = Date.now();
                 }
-            }
+            } 
         } else {
             if (lineCrossing.includes(car)) {
                 lineCrossing.pop(car);
@@ -146,10 +184,14 @@ function update() {
 
         if (timerStarted) {
             const elapsedTime = Date.now() - startTime;
-            const minutes = Math.floor(elapsedTime / 60000);
-            const seconds = Math.floor((elapsedTime % 60000) / 1000);
-            const milliseconds = elapsedTime % 1000;
-            document.getElementById('elapsed-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+            if (isNaN(elapsedTime)) {
+                setCurrentTime(0, 0, 0);
+            } else {
+                const minutes = Math.floor(elapsedTime / 60000);
+                const seconds = Math.floor((elapsedTime % 60000) / 1000);
+                const milliseconds = elapsedTime % 1000;
+                setCurrentTime(minutes, seconds, milliseconds);
+            }
         }
     }
     requestAnimationFrame(update);
