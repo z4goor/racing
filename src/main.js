@@ -33,7 +33,9 @@ trackImage.onload = function () {
 };
 
 fastestLap = getFastestLap();
-saveFastestLap(fastestLap);
+if (fastestLap != undefined) {
+    updateFastestLapTime(fastestLap);
+}
 
 lineCrossing = [];
 
@@ -64,8 +66,8 @@ startButton.addEventListener('click', function() {
 });
 
 resetButton.addEventListener('click', function() {
-    localStorage.removeItem('fastestLap');
-    saveFastestLap(Math.inf);
+    localStorage.setItem('fastestLap', undefined);
+    saveFastestLap(undefined);
 });
 
 document.addEventListener('keydown', event => {
@@ -99,20 +101,24 @@ document.addEventListener('keyup', event => {
 });
 
 function getFastestLap() {
-    return localStorage.getItem('fastestLap');
+    return localStorage.getItem('fastestLap') || undefined;
 }
 
 function saveFastestLap(time) {
     localStorage.setItem('fastestLap', time);
-    if (time != null || !isNaN(time)) {
+    fastestLap = time;
+    updateFastestLapTime(time);
+}
+
+function updateFastestLapTime(time) {
+    if (time == undefined) {
+        document.getElementById('fastest-time').textContent = '0:00.000';
+    } else {
         const minutes = Math.floor(time / 60000);
         const seconds = Math.floor((time % 60000) / 1000);
         const milliseconds = time % 1000;
         document.getElementById('fastest-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-    } else {
-        document.getElementById('fastest-time').textContent = `0:00.000`;
     }
-    fastestLap = time;
 }
 
 function setCurrentTime(min, sec, ms) {
@@ -159,14 +165,13 @@ function update() {
                 
                 if (timerStarted) {
                     const elapsedTime = Date.now() - startTime;
-                    if (fastestLap == null || elapsedTime < fastestLap) {
+                    if (fastestLap == undefined || elapsedTime < fastestLap) {
                         saveFastestLap(elapsedTime);
                     }
-                    startTime = Date.now();
                 } else {
                     timerStarted = true;
-                    startTime = Date.now();
                 }
+                startTime = Date.now();
             } 
         } else {
             if (lineCrossing.includes(car)) {
