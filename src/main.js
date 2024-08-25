@@ -24,7 +24,7 @@ const canvas = document.createElement('canvas');
 canvas.width = track.clientWidth;
 canvas.height = track.clientHeight;
 track.appendChild(canvas);
-const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 const trackImage = new Image();
 trackImage.src = './track001.png';
@@ -33,9 +33,7 @@ trackImage.onload = function () {
 };
 
 fastestLap = getFastestLap();
-if (fastestLap != undefined) {
-    updateFastestLapTime(fastestLap);
-}
+updateFastestLapTime(fastestLap);
 
 lineCrossing = [];
 
@@ -94,14 +92,23 @@ document.addEventListener('keydown', event => {
 
 document.addEventListener('keyup', event => {
     keysPressed[event.code] = false;
-
     if (event.code === 'KeyA' || event.code === 'KeyD') {
         if (car) car.setRotationSpeed(0);
     }
 });
 
 function getFastestLap() {
-    return localStorage.getItem('fastestLap') || undefined;
+    const value = localStorage.getItem('fastestLap');
+
+    if (value !== null) {
+        const parsedValue = parseInt(value, 10);
+
+        if (!isNaN(parsedValue)) {
+            return parsedValue;
+        }
+    }
+
+    return null;
 }
 
 function saveFastestLap(time) {

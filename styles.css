@@ -8,6 +8,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    margin-left: 10%;
+    margin-right: 10%;        
 }
 
 button {
@@ -16,27 +18,46 @@ button {
     border-radius: 5%;
 }
 
+#menu {
+    text-align: center; /* Center the content within the menu */
+    margin-bottom: 20px;
+}
+
+#controls {
+    margin: 10px 0;
+}
+
+#timer {
+    width: 60%; /* Set the timer width to 60% of the screen */
+    margin: 0 auto; /* Center the timer */
+    overflow: hidden; /* Clear floats */
+}
+
+.timer {
+    margin: 5px 0;
+}
+
+#current-lap,
+#fastest-lap {
+    display: inline-block; /* Make both elements inline-block */
+    vertical-align: middle; /* Align them vertically in the middle */
+    width: 150px; /* Set width to 150px */
+    text-align: center; /* Center text inside the divs */
+}
+
+#current-lap {
+    float: left;
+    margin: 5px 0;
+}
+
+#fastest-lap {
+    float: right; /* Float fastest lap to the right */
+}
+
 #track {
     background-color: lightblue;
     width: 700px;
     height: 500px;
     position: relative;
-}
-
-#timer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#current-lap {
-    display: flex;
-}
-
-#fastest_time {
-    display: flex;
-}
-
-.time {
-    padding-left: 5px;
+    margin: 0 auto; /* Center the track */
 }

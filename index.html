@@ -8,15 +8,17 @@
 </head>
 <body>
     <div id="menu">
-        <button id="startButton">Start Car</button>
-        <button id="resetFastestLapButton">Reset Best</button>
+        <div id="controls">
+            <button id="startButton">Start Car</button>
+            <button id="resetFastestLapButton">Reset Best</button>
+        </div>
         <div id="timer">
             <div id="current-lap">
-                <p>Lap time:</p>
+                <p class="timer">Lap time:</p>
                 <p id="current-time" class="timer">0:00.000</p>
             </div>
             <div id="fastest-lap">
-                <p>Fastest time:</p>
+                <p class="timer">Fastest time:</p>
                 <p id="fastest-time" class="timer">0:00.000</p>
             </div>
         </div>
