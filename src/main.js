@@ -151,15 +151,11 @@ function linesIntersect(line1, line2) {
 function isMovingTowardsLine(car, line) {
     const { x: carX, y: carY } = car;
     const { p1, p2 } = line;
-
-    // Vector from line start to end
+    
     const lineVector = { x: p2.x - p1.x, y: p2.y - p1.y };
-    // Vector from line start to car position
     const carToLineStartVector = { x: carX - p1.x, y: carY - p1.y };
-    // Car's movement direction vector
     const movementVector = car.direction;
-
-    // Dot product to check if car is moving towards the line
+    
     const dotProduct = (lineVector.x * movementVector.x + lineVector.y * movementVector.y) 
                      - (carToLineStartVector.x * movementVector.x + carToLineStartVector.y * movementVector.y);
 
