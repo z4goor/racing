@@ -1,7 +1,12 @@
 {
+    "startLine": {
+        "p1": {"x": 303, "y": 13},
+        "p2": {"x": 303, "y": 65}
+    },
     "startPoint": {
         "x": 280,
         "y": 40,
         "rotation": 90
-    }
+    },
+    "fastestLap": null
 }

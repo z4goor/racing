@@ -1,3 +1,7 @@
+* {
+    color: bisque;
+}
+
 body {
     background-color: #21272A; /* Light grey background for the entire page */
     color: #333; /* Dark grey text color for better readability */
@@ -6,9 +10,33 @@ body {
     padding: 0; /* Remove default padding */
 }
 
+button {
+    background-color: gray;
+    border: 0;
+    border-radius: 5%;
+}
+
 #track {
     background-color: lightblue;
     width: 700px;
     height: 500px;
     position: relative;
+}
+
+#timer {
+    display: flex;
+    justify-content: space-between; /* Space out the items */
+    align-items: center; /* Center items vertically */
+}
+
+#current-lap {
+    display: flex;
+}
+
+#fastest_time {
+    display: flex;
+}
+
+.time {
+    padding-left: 5px;
 }

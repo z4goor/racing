@@ -13,6 +13,30 @@ export class Car {
         this.initCar();
     }
 
+    get corners() {
+        const topLeft = {
+            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
+            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
+          };
+        
+          const topRight = {
+            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
+            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
+          };
+        
+          const bottomRight = {
+            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
+            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
+          };
+        
+          const bottomLeft = {
+            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
+            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
+          };
+        
+          return [topLeft, topRight, bottomRight, bottomLeft];
+    }
+
     initCar() {
         this.element.style.width = this.width + 'px';
         this.element.style.height = this.height + 'px';
@@ -69,7 +93,7 @@ export class Car {
     }
 
     checkCollision(ctx) {
-        for (const corner of this.calculateCorners()) {
+        for (const corner of this.corners) {
             const imageData = ctx.getImageData(corner.x, corner.y, 1, 1);
             const [r, g, b] = imageData.data;
     
@@ -101,29 +125,5 @@ export class Car {
             this.rotation += this.rotationSpeed;
             this.setRotation(this.rotation);
         }
-    }
-
-    calculateCorners() {
-        const topLeft = {
-            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const topRight = {
-            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const bottomRight = {
-            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const bottomLeft = {
-            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          return [topLeft, topRight, bottomRight, bottomLeft];
     }
 }

@@ -7,7 +7,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <button id="startButton">Start Car</button>
+    <div id="menu">
+        <button id="startButton">Start Car</button>
+        <div id="timer">
+            <div id="current-lap">
+                <p>Lap time:</p>
+                <p id="elapsed-time" class="timer">0:00.000</p>
+            </div>
+            <div id="fastest-lap">
+                <p>Fastest time:</p>
+                <p id="fastest-time" class="timer">0:00.000</p>
+            </div>
+        </div>
+    </div>
     <div id="track"></div>
     <script src="src/main.js" type="module"></script>
 </body>
