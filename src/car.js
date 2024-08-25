@@ -9,6 +9,7 @@ export class Car {
         this.speed = 0;
         this.direction = { x: 0, y: 0 };
         this.rotationSpeed = 0;
+        this.reverseMove = false;
         this.element = document.createElement('div');
         this.initCar();
     }
