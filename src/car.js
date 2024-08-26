@@ -128,7 +128,7 @@ export class Car {
         }
     }
 
-    getSensorDistances(ctx, maxDistance) {
+    getSensorData(ctx, maxDistance) {
         const sensorAngles = [
             this.rotation - 135,
             this.rotation - 180,
@@ -136,42 +136,28 @@ export class Car {
             this.rotation - 45,
             this.rotation
         ];
-        
-        const sensorPositions = sensorAngles.map(angle => {
-            const radAngle = angle * (Math.PI / 180);
-            return {
-                x: this.x + (this.width / 2) * Math.cos(radAngle),
-                y: this.y + (this.height / 2) * Math.sin(radAngle)
-            };
-        });
 
-        sensorPositions.forEach((sensorPos, index) => {
-            const angle = sensorAngles[index] * (Math.PI / 180);
-    
-            for (let dist = 0; dist < maxDistance; dist++) {
-                const checkX = sensorPos.x + dist * Math.cos(angle);
-                const checkY = sensorPos.y + dist * Math.sin(angle);
-    
-                const imageData = ctx.getImageData(checkX, checkY, 1, 1).data;
-    
-                if (imageData[0] === 0 && imageData[1] === 0 && imageData[2] === 0) {
-                    ctx.beginPath();
-                    ctx.moveTo(sensorPos.x, sensorPos.y);
-                    ctx.lineTo(checkX, checkY);
-                    ctx.strokeStyle = 'red';
-                    ctx.stroke();
+        const sensorData = sensorAngles.map(angle => {
+            const radAngle = angle * (Math.PI / 180);
+            let distance = 0;
+            let sensorX = this.x;
+            let sensorY = this.y;
+
+            while (distance < maxDistance) {
+                sensorX = this.x + distance * Math.cos(radAngle);
+                sensorY = this.y + distance * Math.sin(radAngle);
+
+                if (this.isCollision(ctx, sensorX, sensorY)) {
                     break;
                 }
-                
-                if (dist === maxDistance - 1) {
-                    ctx.beginPath();
-                    ctx.moveTo(sensorPos.x, sensorPos.y);
-                    ctx.lineTo(checkX, checkY);
-                    ctx.strokeStyle = 'red';
-                    ctx.stroke();
-                }
+
+                distance++;
             }
+
+            return { distance, endX: sensorX, endY: sensorY };
         });
+
+        return sensorData;
     }
 
     measureDistance(ctx, direction, maxDistance) {
@@ -190,8 +176,6 @@ export class Car {
             distance++;
         }
 
-        this.drawSensor(ctx, sensorX, sensorY);
-
         return distance;
     }
     
@@ -199,14 +183,5 @@ export class Car {
         const imageData = ctx.getImageData(x, y, 1, 1);
         const [r, g, b] = imageData.data;
         return r === 0 && g === 0 && b === 0;
-    }
-    
-    drawSensor(ctx, endX, endY) {
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.stroke();
     }
 }

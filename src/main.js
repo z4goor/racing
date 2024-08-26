@@ -202,6 +202,17 @@ function update() {
             car.rotate();
         }
 
+        // Get sensor data and draw sensors
+        const sensorData = car.getSensorData(ctx, 150);
+        sensorData.forEach(({ distance, endX, endY }) => {
+            ctx.beginPath();
+            ctx.moveTo(car.x, car.y);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        });
+
         const corners = car.corners;
         const carEdges = [
             { p1: corners[0], p2: corners[1] },
@@ -209,8 +220,6 @@ function update() {
             { p1: corners[2], p2: corners[3] },
             { p1: corners[3], p2: corners[0] }
         ];
-
-        car.getSensorDistances(ctx, 150);
 
         const hasCrossedLine = carEdges.some(edge => linesIntersect(edge, startLine));
         const movingTowardsLine = isMovingTowardsLine(car, startLine);
@@ -222,7 +231,6 @@ function update() {
                 if (!movingTowardsLine) {
                     car.reverseMode = true;
                 } else {
-                
                     if (timerStarted && !car.reverseMode) {
                         const elapsedTime = Date.now() - startTime;
                         if (fastestLap == undefined || elapsedTime < fastestLap) {
@@ -237,7 +245,6 @@ function update() {
                     } else {
                         car.reverseMode = false;
                     }
-
                 }
             }
         } else {
@@ -261,5 +268,6 @@ function update() {
     requestAnimationFrame(update);
 }
 
+
 update();
-setInterval(sendGameStateToAI, 400);
+// setInterval(sendGameStateToAI, 400);
