@@ -9,7 +9,7 @@ let timerStarted = false;
 let startTime;
 let fastestLap;
 
-fetch('./config.json')
+fetch('../config/config.json')
     .then(response => response.json())
     .then(data => {
         trackConfig = data;
@@ -18,7 +18,7 @@ fetch('./config.json')
 const startButton = document.getElementById('startButton');
 const resetButton = document.getElementById('resetFastestLapButton');
 const track = document.getElementById('track');
-track.style.backgroundImage = "url('./track001.png')";
+track.style.backgroundImage = "url('../public/static/track001.png')";
 
 const canvas = document.createElement('canvas');
 canvas.width = track.clientWidth;
@@ -27,7 +27,7 @@ track.appendChild(canvas);
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
 const trackImage = new Image();
-trackImage.src = './track001.png';
+trackImage.src = '../public/static/track001.png';
 trackImage.onload = function () {
     ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
 };
