@@ -16,6 +16,7 @@ fetch('../config/config.json')
     });
 
 const startButton = document.getElementById('startButton');
+const removeCarButton = document.getElementById('removeCarButton');
 const resetButton = document.getElementById('resetFastestLapButton');
 const track = document.getElementById('track');
 track.style.backgroundImage = "url('../public/static/track001.png')";
@@ -66,6 +67,11 @@ startButton.addEventListener('click', function() {
 resetButton.addEventListener('click', function() {
     localStorage.setItem('fastestLap', undefined);
     saveFastestLap(undefined);
+});
+
+removeCarButton.addEventListener('click', function() {
+    track.removeChild(car.element);
+    car = null;
 });
 
 document.addEventListener('keydown', event => {
@@ -162,6 +168,29 @@ function isMovingTowardsLine(car, line) {
     return dotProduct > 0;
 }
 
+function sendGameStateToAI() {
+    const gameState = {"x": 1, "y": 2};
+    if (!car) {
+        return;
+    }
+    console.log('sending request');
+    fetch('http://localhost:5000/game-state', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify("car.sensors"),
+    })
+    .then(response => response.json())
+    .then(data => {
+        applyAIAction(data.action);
+    });
+}
+
+function applyAIAction(action) {
+    console.log(action);
+}
+
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
@@ -233,3 +262,4 @@ function update() {
 }
 
 update();
+setInterval(sendGameStateToAI, 400);
