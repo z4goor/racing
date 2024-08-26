@@ -9,12 +9,16 @@ CORS(app)
 def receive_game_state():
     game_state = request.json
     print(game_state)
-    return json.dumps({"action": 'dupa'})
+    return json.dumps(ai_decide_action(game_state))
 
 def ai_decide_action(game_state):
-    if game_state['car']['speed'] < 10:
-        return "accelerate"
-    return "turn_left"
+    if game_state['sensors'][2] < 80:
+        print('obstackle')
+        if game_state['sensors'][1] > game_state['sensors'][3]:
+            return 'left'
+        return 'right'
+    if game_state['speed'] < 0.4:
+        return 'accelerate'
 
 
 if __name__ == "__main__":

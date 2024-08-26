@@ -70,8 +70,10 @@ resetButton.addEventListener('click', function() {
 });
 
 removeCarButton.addEventListener('click', function() {
-    track.removeChild(car.element);
-    car = null;
+    if (car) {
+        track.removeChild(car.element);
+        car = null;
+    }
 });
 
 document.addEventListener('keydown', event => {
@@ -169,26 +171,34 @@ function isMovingTowardsLine(car, line) {
 }
 
 function sendGameStateToAI() {
-    const gameState = {"x": 1, "y": 2};
     if (!car) {
         return;
     }
-    console.log('sending request');
+    const sensors = car.getSensorData(ctx, 150).map(sensor => {return sensor.distance});
     fetch('http://localhost:5000/game-state', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify("car.sensors"),
+        body: JSON.stringify({"speed": car.speed, "sensors": sensors}),
     })
     .then(response => response.json())
     .then(data => {
-        applyAIAction(data.action);
-    });
+        applyAIAction(data);
+    })
+    .catch(error => console.log('error'));
 }
 
 function applyAIAction(action) {
     console.log(action);
+    switch (action) {
+        case 'left':
+            car.setRotationSpeed(-1.8);
+        case 'right':
+            car.setRotationSpeed(1.8);
+        case 'accelerate':
+            car.increaseSpeed(0.1);
+    }
 }
 
 function update() {
@@ -270,4 +280,4 @@ function update() {
 
 
 update();
-// setInterval(sendGameStateToAI, 400);
+setInterval(sendGameStateToAI, 150);
