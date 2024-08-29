@@ -7,58 +7,35 @@ export class Car {
         this.x = 0;
         this.y = 0;
         this.speed = 0;
-        this.direction = { x: 0, y: 0 };
         this.rotationSpeed = 0;
         this.reverseMove = false;
-        this.element = document.createElement('div');
-        this.initCar();
     }
 
     get corners() {
+        const sinRotation = Math.sin(this.rotation);
+        const cosRotation = Math.cos(this.rotation);
+
         const rearLeft = {
-            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const rearRight = {
-            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) - this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) + this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const frontRight = {
-            x: this.x + this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y + this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          const frontLeft = {
-            x: this.x - this.width / 2 * Math.cos(this.rotation / 180 * Math.PI) + this.height / 2 * Math.sin(this.rotation / 180 * Math.PI),
-            y: this.y - this.width / 2 * Math.sin(this.rotation / 180 * Math.PI) - this.height / 2 * Math.cos(this.rotation / 180 * Math.PI)
-          };
-        
-          return [frontLeft, frontRight, rearLeft, rearRight];
-    }
+            x: this.x - (this.width / 2) * cosRotation + (this.height / 2) * sinRotation,
+            y: this.y - (this.width / 2) * sinRotation - (this.height / 2) * cosRotation
+        };
 
-    initCar() {
-        this.element.style.width = this.width + 'px';
-        this.element.style.height = this.height + 'px';
-        this.element.style.backgroundColor = this.color;
-        this.element.style.position = 'absolute';
-        this.element.style.transformOrigin = 'center';
-    }
+        const rearRight = {
+            x: this.x + (this.width / 2) * cosRotation + (this.height / 2) * sinRotation,
+            y: this.y + (this.width / 2) * sinRotation - (this.height / 2) * cosRotation
+        };
 
-    setPosition(x, y) {
-        this.x = x;
-        this.y = y;
-        this.element.style.left = x - this.width / 2 + 'px';
-        this.element.style.top = y - this.height / 2 + 'px';
-    }
+        const frontRight = {
+            x: this.x + (this.width / 2) * cosRotation - (this.height / 2) * sinRotation,
+            y: this.y + (this.width / 2) * sinRotation + (this.height / 2) * cosRotation
+        };
 
-    addToTrack(track) {
-        track.appendChild(this.element);
-    }
+        const frontLeft = {
+            x: this.x - (this.width / 2) * cosRotation - (this.height / 2) * sinRotation,
+            y: this.y - (this.width / 2) * sinRotation + (this.height / 2) * cosRotation
+        };
 
-    setSpeed(speed) {
-        this.speed = speed;
+        return [frontLeft, frontRight, rearLeft, rearRight];
     }
 
     increaseSpeed(amount) {
@@ -73,112 +50,81 @@ export class Car {
         }
     }
 
-    setRotation(degrees) {
-        this.rotation = degrees;
-        this.element.style.transform = `rotate(${degrees}deg)`;
-        this.updateDirection();
-    }
-
     setRotationSpeed(speed) {
-        if (this.speed > 0) {
+        if (this.speed != 0) {
             this.rotationSpeed = speed;
-        } else {
-            this.rotationSpeed = 0;
         }
     }
 
-    updateDirection() {
-        const angle = this.rotation * (Math.PI / 180);
-        this.direction.x = Math.sin(angle);
-        this.direction.y = -Math.cos(angle);
+    setPosition(x, y) {
+        this.x = x;
+        this.y = y;
     }
 
     checkCollision(ctx) {
-        for (const corner of this.corners) {
-            const imageData = ctx.getImageData(corner.x, corner.y, 1, 1);
-            const [r, g, b] = imageData.data;
-    
-            if (r === 0 && g === 0 && b === 0) {
-                return true;
-            }
-        }
-        return false;
+        return this.corners.some(corner => this.isCollision(ctx, corner.x, corner.y));
     }
 
     move(ctx) {
-        const newX = this.x + this.direction.x * this.speed;
-        const newY = this.y + this.direction.y * this.speed;
+        const nextX = this.x + this.speed * Math.sin(this.rotation);
+        const nextY = this.y - this.speed * Math.cos(this.rotation);
 
-        this.setPosition(newX, newY);
-        this.checkCollision(ctx);
+        const originalX = this.x;
+        const originalY = this.y;
+        this.x = nextX;
+        this.y = nextY;
 
-        if (this.speed != 0 && !this.checkCollision(ctx)) {
-            this.x = newX;
-            this.y = newY;
-        } else {
-            this.setPosition(this.x, this.y);
+        const isColliding = this.checkCollision(ctx);
+
+        if (isColliding) {
+            this.x = originalX;
+            this.y = originalY;
             this.speed = 0;
+            this.rotationSpeed = 0;
+        } else {
+            this.x = nextX;
+            this.y = nextY;
         }
+
+        this.rotate();
+        this.draw(ctx);
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+        ctx.restore();
     }
 
     rotate() {
-        if (this.rotationSpeed !== 0) {
-            this.rotation += this.rotationSpeed;
-            this.setRotation(this.rotation);
-        }
+        this.rotation += this.rotationSpeed * Math.PI / 180;
     }
 
-    getSensorData(ctx, maxDistance) {
-        const sensorAngles = [
-            this.rotation - 135,
-            this.rotation - 180,
-            this.rotation - 90,
-            this.rotation - 45,
-            this.rotation
-        ];
+    getSensorData(ctx) {
+        const sensorAngles = [-Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2];
 
         const sensorData = sensorAngles.map(angle => {
-            const radAngle = angle * (Math.PI / 180);
+            const radAngle = this.rotation + angle;
             let distance = 0;
-            let sensorX = this.x;
-            let sensorY = this.y;
+            let sensorX, sensorY;
 
-            while (distance < maxDistance) {
-                sensorX = this.x + distance * Math.cos(radAngle);
-                sensorY = this.y + distance * Math.sin(radAngle);
-
+            while (true) {
+                sensorX = this.x + distance * Math.sin(radAngle);
+                sensorY = this.y - distance * Math.cos(radAngle);
                 if (this.isCollision(ctx, sensorX, sensorY)) {
                     break;
                 }
-
                 distance++;
             }
-
             return { distance, endX: sensorX, endY: sensorY };
         });
 
         return sensorData;
     }
 
-    measureDistance(ctx, direction, maxDistance) {
-        let distance = 0;
-        let sensorX = this.x;
-        let sensorY = this.y;
-
-        while (distance < maxDistance) {
-            sensorX = this.x + distance * Math.cos(this.rotation * Math.PI / 180 + direction);
-            sensorY = this.y + distance * Math.sin(this.rotation * Math.PI / 180 + direction);
-
-            if (this.isCollision(ctx, sensorX, sensorY)) {
-                break;
-            }
-
-            distance++;
-        }
-
-        return distance;
-    }
-    
     isCollision(ctx, x, y) {
         const imageData = ctx.getImageData(x, y, 1, 1);
         const [r, g, b] = imageData.data;
