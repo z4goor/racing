@@ -8,6 +8,7 @@ let lineCrossing;
 let timerStarted = false;
 let startTime;
 let fastestLap;
+let show_sensors;
 
 fetch('../config/config.json')
     .then(response => response.json())
@@ -37,6 +38,7 @@ fastestLap = getFastestLap();
 updateFastestLapTime(fastestLap);
 
 lineCrossing = [];
+show_sensors = true;
 
 startButton.addEventListener('click', function() {
     if (!trackConfig) {
@@ -81,16 +83,19 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyW':
-            if (car) car.increaseSpeed(0.6);
+            if (car) car.increaseSpeed(0.5);
             break;
         case 'KeyA':
-            if (car) car.setRotationSpeed(-2);
+            if (car) car.setRotationSpeed(-3.7);
             break;
         case 'KeyS':
-            if (car) car.decreaseSpeed(1);
+            if (car) car.decreaseSpeed(0.7);
             break;
         case 'KeyD':
-            if (car) car.setRotationSpeed(2);
+            if (car) car.setRotationSpeed(3.7);
+            break;
+        case 'KeyX':
+            show_sensors = !show_sensors;
             break;
         case 'Space':
             car.x -= 200;
@@ -212,16 +217,18 @@ function update() {
             car.rotate();
         }
 
-        // Get sensor data and draw sensors
-        const sensorData = car.getSensorData(ctx, 150);
-        sensorData.forEach(({ distance, endX, endY }) => {
-            ctx.beginPath();
-            ctx.moveTo(car.x, car.y);
-            ctx.lineTo(endX, endY);
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        });
+        if (show_sensors) {
+            const sensorData = car.getSensorData(ctx, 150);
+            sensorData.forEach(({ distance, endX, endY }) => {
+                ctx.beginPath();
+                ctx.moveTo(car.x, car.y);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+        }
 
         const corners = car.corners;
         const carEdges = [
