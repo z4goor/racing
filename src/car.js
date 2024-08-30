@@ -1,12 +1,12 @@
 export class Car {
-    constructor(width, height, rotation, color) {
+    constructor(width, height, color) {
         this.width = width;
         this.height = height;
-        this.rotation = rotation;
         this.color = color;
         this.x = 0;
         this.y = 0;
         this.speed = 0;
+        this.rotation = 0;
         this.rotationSpeed = 0;
         this.reverseMove = false;
     }
@@ -59,6 +59,10 @@ export class Car {
     setPosition(x, y) {
         this.x = x;
         this.y = y;
+    }
+
+    setRotation(rotation) {
+        this.rotation = rotation
     }
 
     checkCollision(ctx) {

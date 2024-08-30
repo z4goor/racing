@@ -25,26 +25,15 @@ fastestLap = getFastestLap();
 updateFastestLapTime(fastestLap);
 
 startButton.addEventListener('click', function() {
-    const trackConfig = track.getTrackConfig();
-    if (!trackConfig) {
-        console.error('Track configuration not loaded.');
-        return;
-    }
-
-    const startLine = track.getStartLine();
-    if (!startLine) {
-        console.error('Start line not defined in track configuration.');
-        return;
-    }
-
     timerStarted = false;
     setCurrentTime(0, 0, 0);
 
-    car = new Car(15, 25, trackConfig.startPoint.rotation * Math.PI / 180, '#fcff2d');
+    car = new Car(15, 25, '#fcff2d');
+    track.addCarToTrack(car);
+});
 
-    if (trackConfig.startPoint) {
-        car.setPosition(trackConfig.startPoint.x, trackConfig.startPoint.y);
-    }
+removeCarButton.addEventListener('click', function() {
+    car = null;
 });
 
 resetButton.addEventListener('click', function() {
@@ -52,37 +41,32 @@ resetButton.addEventListener('click', function() {
     saveFastestLap(undefined);
 });
 
-removeCarButton.addEventListener('click', function() {
-    car = null;
-});
-
 document.addEventListener('keydown', event => {
     keysPressed[event.code] = true;
 
-    if (car) {
-        switch (event.code) {
-            case 'KeyW':
-                car.increaseSpeed(0.5);
-                break;
-            case 'KeyA':
-                car.setRotationSpeed(-2.2);
-                break;
-            case 'KeyS':
-                car.decreaseSpeed(0.7);
-                break;
-            case 'KeyD':
-                car.setRotationSpeed(2.2);
-                break;
-            case 'KeyX':
-                show_sensors = !show_sensors;
-                break;
-            case 'KeyC':
-                show_corners = !show_corners;
-                break;
-            case 'Space':
-                car.x -= 200;
-                break;
-        }
+    if (!car) return;
+    switch (event.code) {
+        case 'KeyW':
+            car.increaseSpeed(0.5);
+            break;
+        case 'KeyA':
+            car.setRotationSpeed(-2.2);
+            break;
+        case 'KeyS':
+            car.decreaseSpeed(0.7);
+            break;
+        case 'KeyD':
+            car.setRotationSpeed(2.2);
+            break;
+        case 'KeyX':
+            show_sensors = !show_sensors;
+            break;
+        case 'KeyC':
+            show_corners = !show_corners;
+            break;
+        case 'Space':
+            car.x -= 200;
+            break;
     }
 });
 
@@ -130,8 +114,6 @@ function linesIntersect(line1, line2) {
 }
 
 function isMovingTowardsLine(car, line) {
-    if (!car || !line) return false;
-
     const { x: carX, y: carY, rotation } = car;
     const { p1, p2 } = line;
     
@@ -143,11 +125,6 @@ function isMovingTowardsLine(car, line) {
     const carToLineStartVector = {
         x: p1.x - carX,
         y: p1.y - carY
-    };
-
-    const lineVector = {
-        x: p2.x - p1.x,
-        y: p2.y - p1.y
     };
     
     const dotProduct = carDirection.x * carToLineStartVector.x + carDirection.y * carToLineStartVector.y;
@@ -204,7 +181,6 @@ function update() {
         const corners = car.corners;
 
         if (show_corners) track.drawCorners(car);
-
         if (show_sensors) track.drawSensors(car);
 
         const carEdges = [

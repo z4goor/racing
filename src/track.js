@@ -6,7 +6,7 @@ export class Track {
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
         this.trackImage = new Image();
-        this.trackConfig = null;
+        this.config = null;
         this.startLine = null;
 
         this.initialize();
@@ -14,7 +14,7 @@ export class Track {
 
     async initialize() {
         this.setupCanvas();
-        await this.loadTrackConfig();
+        await this.loadConfig();
         this.loadTrackImage();
     }
 
@@ -24,11 +24,11 @@ export class Track {
         this.trackElement.appendChild(this.canvas);
     }
 
-    async loadTrackConfig() {
+    async loadConfig() {
         try {
             const response = await fetch(this.configUrl);
-            this.trackConfig = await response.json();
-            this.startLine = this.trackConfig.startLine;
+            this.config = await response.json();
+            this.startLine = this.config.startLine;
         } catch (error) {
             console.error('Error loading track configuration:', error);
         }
@@ -61,8 +61,13 @@ export class Track {
         return this.trackImage;
     }
 
-    getTrackConfig() {
-        return this.trackConfig;
+    getConfig() {
+        return this.config;
+    }
+
+    addCarToTrack(car) {
+        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
+        car.setRotation(this.config.startPoint.rotation * Math.PI / 180)
     }
 
     drawCorners(car) {
