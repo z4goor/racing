@@ -1,9 +1,9 @@
 import { Car } from "./car.js";
+import { Track } from "./track.js";
 
 let car = null;
 let keysPressed = {};
-let trackConfig = null;
-let startLine = null;
+let track = null;
 let lineCrossing = [];
 let timerStarted = false;
 let startTime = null;
@@ -11,40 +11,32 @@ let fastestLap = null;
 let show_sensors = false;
 let show_corners = false;
 
-fetch('../config/config.json')
-    .then(response => response.json())
-    .then(data => {
-        trackConfig = data;
-    });
+const trackConfigUrl = '../config/config.json';
+const trackImageUrl = '../public/static/track001.png';
+const trackElementId = 'track';
+
+track = new Track(trackElementId, trackConfigUrl, trackImageUrl);
 
 const startButton = document.getElementById('startButton');
 const removeCarButton = document.getElementById('removeCarButton');
 const resetButton = document.getElementById('resetFastestLapButton');
-const track = document.getElementById('track');
-track.style.backgroundImage = "url('../public/static/track001.png')";
-
-const canvas = document.createElement('canvas');
-canvas.width = track.clientWidth;
-canvas.height = track.clientHeight;
-track.appendChild(canvas);
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-const trackImage = new Image();
-trackImage.src = '../public/static/track001.png';
-trackImage.onload = function () {
-    ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
-};
 
 fastestLap = getFastestLap();
 updateFastestLapTime(fastestLap);
 
 startButton.addEventListener('click', function() {
+    const trackConfig = track.getTrackConfig();
     if (!trackConfig) {
         console.error('Track configuration not loaded.');
         return;
     }
 
-    startLine = trackConfig.startLine;
+    const startLine = track.getStartLine();
+    if (!startLine) {
+        console.error('Start line not defined in track configuration.');
+        return;
+    }
+
     timerStarted = false;
     setCurrentTime(0, 0, 0);
 
@@ -163,11 +155,10 @@ function isMovingTowardsLine(car, line) {
     return dotProduct > 0;
 }
 
-
 function sendGameStateToAI() {
     if (!car) return;
 
-    const sensors = car.getSensorData(ctx, 150).map(sensor => sensor.distance);
+    const sensors = car.getSensorData(track.getContext(), 150).map(sensor => sensor.distance);
     fetch('http://localhost:5000/game-state', {
         method: 'POST',
         headers: {
@@ -197,8 +188,11 @@ function applyAIAction(action) {
 }
 
 function update() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(trackImage, 0, 0, canvas.width, canvas.height);
+    const ctx = track.getContext();
+    const trackImage = track.getTrackImage();
+
+    ctx.clearRect(0, 0, track.getCanvas().width, track.getCanvas().height);
+    ctx.drawImage(trackImage, 0, 0, track.getCanvas().width, track.getCanvas().height);
 
     if (car) {
         car.move(ctx);
@@ -208,36 +202,17 @@ function update() {
         }
 
         const corners = car.corners;
-        const cornerColors = ['#ff0000', '#00ff00', '#0000ff', '#FFC0CB'];
 
-        if (show_corners) {
-            corners.forEach((corner, index) => {
-                ctx.beginPath();
-                ctx.arc(corner.x, corner.y, 2, 0, 2 * Math.PI);
-                ctx.fillStyle = cornerColors[index];
-                ctx.fill();
-            });
-        }
+        if (show_corners) track.drawCorners(car);
 
-        if (show_sensors) {
-            const sensorData = car.getSensorData(ctx);
-            sensorData.forEach(({ distance, endX, endY }) => {
-                ctx.beginPath();
-                ctx.moveTo(car.x, car.y);
-                ctx.lineTo(endX, endY);
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            });
-        }
+        if (show_sensors) track.drawSensors(car);
 
         const carEdges = [
-            { p1: corners[0], p2: corners[1] },
-            { p1: corners[1], p2: corners[2] },
-            { p1: corners[2], p2: corners[3] },
-            { p1: corners[3], p2: corners[0] }
+            { p1: corners[0], p2: corners[2] },
+            { p1: corners[1], p2: corners[3] }
         ];
 
+        const startLine = track.getStartLine();
         const hasCrossedLine = carEdges.some(edge => linesIntersect(edge, startLine));
         const movingTowardsLine = isMovingTowardsLine(car, startLine);
 
@@ -282,4 +257,3 @@ function update() {
 }
 
 update();
-// setInterval(sendGameStateToAI, 150);
