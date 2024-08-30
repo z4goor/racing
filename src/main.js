@@ -135,7 +135,7 @@ function isMovingTowardsLine(car, line) {
 function sendGameStateToAI() {
     if (!car) return;
 
-    const sensors = car.getSensorData(track.getContext(), 150).map(sensor => sensor.distance);
+    const sensors = car.getSensorData(track.getContext()).map(sensor => sensor.distance);
     fetch('http://localhost:5000/game-state', {
         method: 'POST',
         headers: {
@@ -165,14 +165,10 @@ function applyAIAction(action) {
 }
 
 function update() {
-    const ctx = track.getContext();
-    const trackImage = track.getTrackImage();
-
-    ctx.clearRect(0, 0, track.getCanvas().width, track.getCanvas().height);
-    ctx.drawImage(trackImage, 0, 0, track.getCanvas().width, track.getCanvas().height);
+    track.update();
 
     if (car) {
-        car.move(ctx);
+        car.move(track.getContext());
 
         if (car.speed > 0) {
             car.rotate();

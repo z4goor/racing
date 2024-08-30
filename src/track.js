@@ -5,7 +5,7 @@ export class Track {
         this.imageUrl = imageUrl;
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-        this.trackImage = new Image();
+        this.image = new Image();
         this.config = null;
         this.startLine = null;
 
@@ -35,14 +35,20 @@ export class Track {
     }
 
     loadTrackImage() {
-        this.trackImage.src = this.imageUrl;
-        this.trackImage.onload = () => {
+        this.image.src = this.imageUrl;
+        this.image.onload = () => {
             this.drawTrackImage();
         };
     }
 
     drawTrackImage() {
-        this.ctx.drawImage(this.trackImage, 0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    update() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+
     }
 
     getStartLine() {
@@ -58,7 +64,7 @@ export class Track {
     }
 
     getTrackImage() {
-        return this.trackImage;
+        return this.image;
     }
 
     getConfig() {
