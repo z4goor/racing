@@ -4,7 +4,6 @@ import { Track } from "./track.js";
 let car = null;
 let keysPressed = {};
 let track = null;
-let lineCrossing = [];
 let fastestLap = null;
 
 const trackConfigUrl = '../config/config.json';
@@ -46,13 +45,13 @@ document.addEventListener('keydown', event => {
             car.increaseSpeed(0.5);
             break;
         case 'KeyA':
-            car.setRotationSpeed(-2.2);
+            car.setRotationSpeed(-4.2);
             break;
         case 'KeyS':
-            car.decreaseSpeed(0.7);
+            car.decreaseSpeed(0.8);
             break;
         case 'KeyD':
-            car.setRotationSpeed(2.2);
+            car.setRotationSpeed(4.2);
             break;
         case 'KeyX':
             showSensorsCheckbox.checked = !showSensorsCheckbox.checked;
@@ -93,41 +92,6 @@ function setCurrentTime(min, sec, ms) {
     document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
-function linesIntersect(line1, line2) {
-    const { p1, p2 } = line1;
-    const { p1: q1, p2: q2 } = line2;
-
-    const det = (p2.x - p1.x) * (q2.y - q1.y) - (p2.y - p1.y) * (q2.x - q1.x);
-
-    if (det === 0) {
-        return false;
-    }
-
-    const lambda = ((q2.y - q1.y) * (q2.x - p1.x) + (q1.x - q2.x) * (q2.y - p1.y)) / det;
-    const gamma = ((p1.y - p2.y) * (q2.x - p1.x) + (p2.x - p1.x) * (q2.y - p1.y)) / det;
-
-    return (0 <= lambda && lambda <= 1) && (0 <= gamma && gamma <= 1);
-}
-
-function isMovingTowardsLine(car, line) {
-    const { x: carX, y: carY, rotation } = car;
-    const { p1, p2 } = line;
-    
-    const carDirection = {
-        x: Math.sin(rotation),
-        y: -Math.cos(rotation)
-    };
-    
-    const carToLineStartVector = {
-        x: p1.x - carX,
-        y: p1.y - carY
-    };
-    
-    const dotProduct = carDirection.x * carToLineStartVector.x + carDirection.y * carToLineStartVector.y;
-
-    return dotProduct > 0;
-}
-
 function sendGameStateToAI() {
     if (!car) return;
 
@@ -164,50 +128,14 @@ function update() {
     track.update();
 
     if (car) {
-        car.move(track.getContext());
-
-        if (car.speed > 0) {
-            car.rotate();
+        const lapTime = car.move(track.context, track.startLine, track.initialRotation);
+        
+        if (lapTime && (!fastestLap || lapTime < fastestLap)) {
+            saveFastestLap(lapTime);
         }
-
-        const corners = car.corners;
 
         if (showSensorsCheckbox.checked) track.drawSensors(car);
         if (showCornersCheckbox.checked) track.drawCorners(car);
-
-        const carEdges = [
-            { p1: corners[0], p2: corners[2] },
-            { p1: corners[1], p2: corners[3] }
-        ];
-
-        const startLine = track.getStartLine();
-        const hasCrossedLine = carEdges.some(edge => linesIntersect(edge, startLine));
-        const movingTowardsLine = isMovingTowardsLine(car, startLine);
-
-        if (hasCrossedLine) {
-            if (!lineCrossing.includes(car)) {
-                lineCrossing.push(car);
-
-                if (!movingTowardsLine) {
-                    car.reverseMode = true;
-                } else {
-                    const lapTime = car.startLap();
-                    if (!car.reverseMode) {
-                        if (lapTime && (!fastestLap || lapTime < fastestLap)) {
-                            saveFastestLap(lapTime);
-                        }
-                    }
-
-                    if (car.reverseMode) {
-                        car.reverseMode = false;
-                    }
-                }
-            }
-        } else {
-            if (lineCrossing.includes(car)) {
-                lineCrossing.pop(car);
-            }
-        }
     }
     requestAnimationFrame(update);
 }
