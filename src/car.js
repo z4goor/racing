@@ -89,15 +89,6 @@ export class Car {
         this.rotationSpeed = 0;
     }
 
-    draw(context) {
-        context.save();
-        context.translate(this.x, this.y);
-        context.rotate(this.rotation);
-        context.fillStyle = this.color;
-        context.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
-        context.restore();
-    }
-
     startLap() {
         if (!this.lapStartTime) {
             this.lapStartTime = Date.now();

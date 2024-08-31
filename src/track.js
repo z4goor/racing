@@ -86,7 +86,7 @@ export class Track {
             } else {
                 car.stop();
             }
-            car.draw(this.context);
+            this.drawCar(car);
         });
     }
 
@@ -155,6 +155,15 @@ export class Track {
         });
 
         return sensorData;
+    }
+
+    drawCar(car) {
+        this.context.save();
+        this.context.translate(car.x, car.y);
+        this.context.rotate(car.rotation);
+        this.context.fillStyle = car.color;
+        this.context.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
+        this.context.restore();
     }
 
     drawCorners() {
