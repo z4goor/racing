@@ -98,34 +98,6 @@ export class Car {
         context.restore();
     }
 
-    getSensorData(context) {
-        const sensorAngles = [-Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2];
-
-        const sensorData = sensorAngles.map(angle => {
-            const radAngle = this.rotation + angle;
-            let distance = 0;
-            let sensorX, sensorY;
-
-            while (true) {
-                sensorX = this.x + distance * Math.sin(radAngle);
-                sensorY = this.y - distance * Math.cos(radAngle);
-                if (this.isCollision(context, sensorX, sensorY)) {
-                    break;
-                }
-                distance++;
-            }
-            return { distance, endX: sensorX, endY: sensorY };
-        });
-
-        return sensorData;
-    }
-
-    isCollision(context, x, y) {
-        const imageData = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = imageData.data;
-        return r === 0 && g === 0 && b === 0;
-    }
-
     startLap() {
         if (!this.lapStartTime) {
             this.lapStartTime = Date.now();

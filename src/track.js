@@ -104,8 +104,8 @@ export class Track {
         return corners.some(corner => this.isCollision(corner, vector));
     }
 
-    isCollision(corner, vector) {
-        const imageData = this.context.getImageData(corner.x + vector.x, corner.y + vector.y, 1, 1);
+    isCollision(point, vector = { x: 0, y: 0}) {
+        const imageData = this.context.getImageData(point.x + vector.x, point.y + vector.y, 1, 1);
         const [r, g, b] = imageData.data;
         return r === 0 && g === 0 && b === 0;
     }
@@ -135,6 +135,28 @@ export class Track {
         return rotation >= minRotation && rotation <= maxRotation;
     }
 
+    getSensorData(car) {
+        const sensorAngles = [-Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2];
+
+        const sensorData = sensorAngles.map(angle => {
+            const radAngle = car.rotation + angle;
+            let distance = 0;
+            let sensorX, sensorY;
+
+            while (true) {
+                sensorX = car.x + distance * Math.sin(radAngle);
+                sensorY = car.y - distance * Math.cos(radAngle);
+                if (this.isCollision({ x: sensorX, y: sensorY})) {
+                    break;
+                }
+                distance++;
+            }
+            return { distance, endX: sensorX, endY: sensorY };
+        });
+
+        return sensorData;
+    }
+
     drawCorners() {
         this.cars.forEach(car => {
             const cornerColors = ['#ff0000', '#00ff00', '#0000ff', '#FFC0CB'];
@@ -149,7 +171,7 @@ export class Track {
 
     drawSensors() {
         this.cars.forEach(car => {
-            const sensorData = car.getSensorData(this.context);
+            const sensorData = this.getSensorData(car);
             sensorData.forEach(({ distance, endX, endY }) => {
                 this.context.beginPath();
                 this.context.moveTo(car.x, car.y);
