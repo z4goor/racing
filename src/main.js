@@ -8,10 +8,9 @@ let lineCrossing = [];
 let fastestLap = null;
 
 const trackConfigUrl = '../config/config.json';
-const trackImageUrl = '../public/static/track001.png';
 const trackElementId = 'track';
 
-track = new Track(trackElementId, trackConfigUrl, trackImageUrl);
+track = new Track(trackElementId, trackConfigUrl);
 
 const startButton = document.getElementById('startButton');
 const removeCarButton = document.getElementById('removeCarButton');

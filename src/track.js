@@ -1,8 +1,7 @@
 export class Track {
-    constructor(trackElementId, configUrl, imageUrl) {
+    constructor(trackElementId, configUrl) {
         this.trackElement = document.getElementById(trackElementId);
         this.configUrl = configUrl;
-        this.imageUrl = imageUrl;
         this.canvas = document.createElement('canvas');
         this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
         this.image = new Image();
@@ -35,7 +34,7 @@ export class Track {
     }
 
     loadTrackImage() {
-        this.image.src = this.imageUrl;
+        this.image.src = this.config.imageUrl;
         this.image.onload = () => {
             this.drawTrackImage();
         };

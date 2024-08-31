@@ -1,4 +1,5 @@
 {
+    "imageUrl": "../public/static/track001.png",
     "startLine": {
         "p1": {"x": 303, "y": 13},
         "p2": {"x": 303, "y": 65}
