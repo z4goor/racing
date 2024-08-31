@@ -9,6 +9,7 @@ export class Car {
         this.rotation = 0;
         this.rotationSpeed = 0;
         this.reverseMove = false;
+        this.lapStartTime = null;
     }
 
     get corners() {
@@ -133,5 +134,15 @@ export class Car {
         const imageData = ctx.getImageData(x, y, 1, 1);
         const [r, g, b] = imageData.data;
         return r === 0 && g === 0 && b === 0;
+    }
+
+    startLap() {
+        if (!this.lapStartTime) {
+            this.lapStartTime = Date.now();
+            return null;
+        }
+        const lapTime = Date.now() - this.lapStartTime;
+        this.lapStartTime = Date.now();
+        return lapTime;
     }
 }

@@ -5,8 +5,6 @@ let car = null;
 let keysPressed = {};
 let track = null;
 let lineCrossing = [];
-let timerStarted = false;
-let startTime = null;
 let fastestLap = null;
 let show_sensors = false;
 let show_corners = false;
@@ -25,7 +23,6 @@ fastestLap = getFastestLap();
 updateFastestLapTime(fastestLap);
 
 startButton.addEventListener('click', function() {
-    timerStarted = false;
     setCurrentTime(0, 0, 0);
 
     car = new Car(15, 25, '#fcff2d');
@@ -195,18 +192,14 @@ function update() {
                 if (!movingTowardsLine) {
                     car.reverseMode = true;
                 } else {
-                    if (timerStarted && !car.reverseMode) {
-                        const elapsedTime = Date.now() - startTime;
-                        if (!fastestLap || elapsedTime < fastestLap) {
-                            saveFastestLap(elapsedTime);
+                    const lapTime = car.startLap();
+                    if (!car.reverseMode) {
+                        if (lapTime && (!fastestLap || lapTime < fastestLap)) {
+                            saveFastestLap(lapTime);
                         }
-                    } else {
-                        timerStarted = true;
                     }
 
-                    if (!car.reverseMode) {
-                        startTime = Date.now();
-                    } else {
+                    if (car.reverseMode) {
                         car.reverseMode = false;
                     }
                 }
@@ -215,14 +208,6 @@ function update() {
             if (lineCrossing.includes(car)) {
                 lineCrossing.pop(car);
             }
-        }
-
-        if (timerStarted) {
-            const elapsedTime = Date.now() - startTime;
-            const minutes = Math.floor(elapsedTime / 60000);
-            const seconds = Math.floor((elapsedTime % 60000) / 1000);
-            const milliseconds = elapsedTime % 1000;
-            setCurrentTime(minutes, seconds, milliseconds);
         }
     }
     requestAnimationFrame(update);
