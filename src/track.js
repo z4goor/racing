@@ -55,20 +55,8 @@ export class Track {
         return this.startLine;
     }
 
-    getCanvas() {
-        return this.canvas;
-    }
-
     getContext() {
         return this.ctx;
-    }
-
-    getTrackImage() {
-        return this.image;
-    }
-
-    getConfig() {
-        return this.config;
     }
 
     addCarToTrack(car) {
