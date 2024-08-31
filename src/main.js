@@ -6,8 +6,6 @@ let keysPressed = {};
 let track = null;
 let lineCrossing = [];
 let fastestLap = null;
-let show_sensors = false;
-let show_corners = false;
 
 const trackConfigUrl = '../config/config.json';
 const trackImageUrl = '../public/static/track001.png';
@@ -18,6 +16,8 @@ track = new Track(trackElementId, trackConfigUrl, trackImageUrl);
 const startButton = document.getElementById('startButton');
 const removeCarButton = document.getElementById('removeCarButton');
 const resetButton = document.getElementById('resetFastestLapButton');
+const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
+const showCornersCheckbox = document.getElementById('showCornersCheckbox');
 
 fastestLap = getFastestLap();
 updateFastestLapTime(fastestLap);
@@ -56,10 +56,10 @@ document.addEventListener('keydown', event => {
             car.setRotationSpeed(2.2);
             break;
         case 'KeyX':
-            show_sensors = !show_sensors;
+            showSensorsCheckbox.checked = !showSensorsCheckbox.checked;
             break;
         case 'KeyC':
-            show_corners = !show_corners;
+            showCornersCheckbox.checked = !showCornersCheckbox.checked;
             break;
         case 'Space':
             car.x -= 200;
@@ -173,8 +173,8 @@ function update() {
 
         const corners = car.corners;
 
-        if (show_corners) track.drawCorners(car);
-        if (show_sensors) track.drawSensors(car);
+        if (showSensorsCheckbox.checked) track.drawSensors(car);
+        if (showCornersCheckbox.checked) track.drawCorners(car);
 
         const carEdges = [
             { p1: corners[0], p2: corners[2] },
