@@ -74,6 +74,14 @@ export class Car {
         this.rotation = rotation;
     }
 
+    setCrossingLine(bool) {
+        this.crossingLine = bool;
+    }
+
+    setReverseMove(bool) {
+        this.reverseMove = bool;
+    }
+
     move(vector) {
         this.x = this.x + vector.x;
         this.y = this.y + vector.y;

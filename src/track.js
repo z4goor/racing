@@ -60,34 +60,39 @@ export class Track {
         this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
 
         this.cars.forEach(car => {
-            const corners = car.corners;
-            const vector = car.movementVector;
-            if (!this.checkCollision(car.corners, vector)) {
-                car.move(vector);
-                if (this.isCarCrossingLine(corners)) {
-                    if (!car.crossingLine) {
-                        car.crossingLine = true;
-                        if (this.checkAppropriateDirection(car)) {
-                            if (!car.reverseMove) {
-                                const previousLapTime = car.startLap();
-                                if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
-                                    this.fastestLap = previousLapTime;
-                                }
-                            } else {
-                                car.reverseMove = false;
-                            }
-                        } else {
-                            car.reverseMove = true;
-                        }
-                    }
-                } else {
-                    car.crossingLine = false;
-                }
-            } else {
-                car.stop();
-            }
+            this.moveCar(car);
             this.drawCar(car);
         });
+    }
+
+    moveCar(car) {
+        const corners = car.corners;
+        const vector = car.movementVector;
+
+        if (this.checkCollision(car.corners, vector)) {
+            return car.stop();
+        }
+
+        car.move(vector);
+        if (this.isCarCrossingLine(corners)) {
+            if (!car.crossingLine) {
+                car.setCrossingLine(true);
+                if (this.checkAppropriateDirection(car)) {
+                    if (!car.reverseMove) {
+                        const previousLapTime = car.startLap();
+                        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
+                            this.fastestLap = previousLapTime;
+                        }
+                    } else {
+                        car.setReverseMove(false);
+                    }
+                } else {
+                    car.setReverseMove(true);
+                }
+            }
+        } else {
+            car.setCrossingLine(false);
+        }
     }
 
     addCarToTrack(car) {
