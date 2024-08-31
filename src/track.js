@@ -69,30 +69,23 @@ export class Track {
         const corners = car.corners;
         const vector = car.movementVector;
 
-        if (this.checkCollision(car.corners, vector)) {
-            return car.stop();
-        }
+        if (this.checkCollision(car.corners, vector)) return car.stop();
 
         car.move(vector);
-        if (!this.isCarCrossingLine(corners)) {
-            car.setCrossingLine(false);
-            return;
-        }
+
+        if (!this.isCarCrossingLine(corners)) return car.setCrossingLine(false);
+
+        if (car.crossingLine) return;
+
+        car.setCrossingLine(true);
         
-        if (!car.crossingLine) {
-            car.setCrossingLine(true);
-            if (this.checkAppropriateDirection(car)) {
-                if (!car.reverseMove) {
-                    const previousLapTime = car.startLap();
-                    if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
-                        this.fastestLap = previousLapTime;
-                    }
-                } else {
-                    car.setReverseMove(false);
-                }
-            } else {
-                car.setReverseMove(true);
-            }
+        if (!this.checkAppropriateDirection(car)) return car.setReverseMove(true);
+
+        if (car.reverseMove) return car.setReverseMove(false);
+
+        const previousLapTime = car.startLap();
+        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
+            this.fastestLap = previousLapTime;
         }
     }
 
