@@ -74,24 +74,25 @@ export class Track {
         }
 
         car.move(vector);
-        if (this.isCarCrossingLine(corners)) {
-            if (!car.crossingLine) {
-                car.setCrossingLine(true);
-                if (this.checkAppropriateDirection(car)) {
-                    if (!car.reverseMove) {
-                        const previousLapTime = car.startLap();
-                        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
-                            this.fastestLap = previousLapTime;
-                        }
-                    } else {
-                        car.setReverseMove(false);
+        if (!this.isCarCrossingLine(corners)) {
+            car.setCrossingLine(false);
+            return;
+        }
+        
+        if (!car.crossingLine) {
+            car.setCrossingLine(true);
+            if (this.checkAppropriateDirection(car)) {
+                if (!car.reverseMove) {
+                    const previousLapTime = car.startLap();
+                    if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
+                        this.fastestLap = previousLapTime;
                     }
                 } else {
-                    car.setReverseMove(true);
+                    car.setReverseMove(false);
                 }
+            } else {
+                car.setReverseMove(true);
             }
-        } else {
-            car.setCrossingLine(false);
         }
     }
 
