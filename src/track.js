@@ -99,6 +99,10 @@ export class Track {
         this.cars.pop(car);
     }
 
+    clearTrack() {
+        this.cars = [];
+    }
+
     checkCollision(corners, vector) {
         return corners.some(corner => this.isCollision(corner, vector));
     }
@@ -154,6 +158,10 @@ export class Track {
         });
 
         return sensorData;
+    }
+
+    getCarData() {
+        return this.cars.map((car) => ({ speed: car.speed, sensors: this.getSensorData(car) }));
     }
 
     drawCar(car) {

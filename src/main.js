@@ -27,7 +27,7 @@ startButton.addEventListener('click', function() {
 });
 
 removeCarButton.addEventListener('click', function() {
-    track.removeCar(controlledCar);
+    track.clearTrack();
     controlledCar = null;
 });
 
@@ -104,15 +104,14 @@ function setCurrentTime(min, sec, ms) {
 }
 
 function sendGameStateToAI() {
-    if (!controlledCar) return;
-
-    const sensors = controlledCar.getSensorData(track.getContext()).map(sensor => sensor.distance);
+    const data = track.getCarData();
+    if (!data.length) return;
     fetch('http://localhost:5000/game-state', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ "speed": controlledCar.speed, "sensors": sensors }),
+        body: JSON.stringify(data),
     })
         .then(response => response.json())
         .then(data => applyAIAction(data))
@@ -120,19 +119,22 @@ function sendGameStateToAI() {
 }
 
 function applyAIAction(action) {
-    if (!controlledCar) return;
-    console.log(action);
-    switch (action) {
-        case 'left':
-            controlledCar.setRotationSpeed(-1.8);
-            break;
-        case 'right':
-            controlledCar.setRotationSpeed(1.8);
-            break;
-        case 'accelerate':
-            controlledCar.increaseSpeed(0.1);
-            break;
-    }
+    track.cars.forEach((car, index) => {
+        switch (action[index]) {
+            case 'left':
+                car.setRotationSpeed(-0.2);
+                break;
+            case 'right':
+                car.setRotationSpeed(0.2);
+                break;
+            case 'accelerate':
+                car.increaseSpeed(0.2);
+                break;
+            case 'accelerate':
+                car.decreaseSpeed(0.4);
+                break;
+        }
+    });
 }
 
 function update() {
@@ -148,3 +150,4 @@ function update() {
 }
 
 update();
+setInterval(sendGameStateToAI, 400);

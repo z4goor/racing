@@ -1,6 +1,7 @@
 from flask import Flask, request
 from flask_cors import CORS
 import json
+import random
 
 app = Flask(__name__)
 CORS(app)
@@ -8,17 +9,16 @@ CORS(app)
 @app.route('/game-state', methods=['POST'])
 def receive_game_state():
     game_state = request.json
-    print(game_state)
+    print("Input: ", game_state)
     return json.dumps(ai_decide_action(game_state))
 
 def ai_decide_action(game_state):
-    if game_state['sensors'][2] < 80:
-        print('obstackle')
-        if game_state['sensors'][1] > game_state['sensors'][3]:
-            return 'left'
-        return 'right'
-    if game_state['speed'] < 0.4:
-        return 'accelerate'
+    response = [random_move() for _ in game_state]
+    print("Output: ", response)
+    return response
+
+def random_move():
+    return random.choice(['left', 'right', 'accelerate', 'brake'])
 
 
 if __name__ == "__main__":
