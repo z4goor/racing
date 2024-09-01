@@ -1,8 +1,10 @@
 export class Car {
-    constructor(width, height, color) {
+    constructor(width, height, color, humanControlled=false) {
+        this.id = crypto.randomUUID();
         this.width = width;
         this.height = height;
         this.color = color;
+        this.humanControlled = humanControlled;
         this.x = 0;
         this.y = 0;
         this.speed = 0;

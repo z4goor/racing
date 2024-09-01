@@ -103,6 +103,13 @@ export class Track {
         this.cars = [];
     }
 
+    restartCar(car) {
+        car.stop();
+        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
+        car.setRotation(this.initialRotation);
+        car.lapStartTime = null;
+    }
+
     checkCollision(corners, vector) {
         return corners.some(corner => this.isCollision(corner, vector));
     }
@@ -160,8 +167,13 @@ export class Track {
         return sensorData;
     }
 
-    getCarData() {
-        return this.cars.map((car) => ({ speed: car.speed, sensors: this.getSensorData(car) }));
+    getCarData(skipHuman = false) {
+        const cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
+    
+        return cars.reduce((acc, car) => {
+            acc[car.id] = { speed: car.speed, sensors: this.getSensorData(car) };
+            return acc;
+        }, {});
     }
 
     drawCar(car) {

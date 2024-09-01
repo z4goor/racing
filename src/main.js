@@ -9,8 +9,10 @@ let fastestLap = getFastestLap();
 const trackConfigUrl = '../config/config.json';
 const trackElementId = 'track';
 
-const startButton = document.getElementById('startButton');
-const removeCarButton = document.getElementById('removeCarButton');
+const addHumanButton = document.getElementById('addHumanButton');
+const addAIButton = document.getElementById('addAIButton');
+const restartHumanButton = document.getElementById('restartHumanButton');
+const removeCarsButton = document.getElementById('removeCarsButton');
 const resetButton = document.getElementById('resetFastestLapButton');
 const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
 const showCornersCheckbox = document.getElementById('showCornersCheckbox');
@@ -19,14 +21,25 @@ const fastestLapTime = document.getElementById('fastest-time')
 
 track = new Track(trackElementId, trackConfigUrl, fastestLap);
 
-startButton.addEventListener('click', function() {
+addHumanButton.addEventListener('click', function() {
+    if (controlledCar) return;
     setCurrentTime(0, 0, 0);
-    const car = new Car(15, 25, '#fcff2d');
-    if (!controlledCar) controlledCar = car;
+    const car = new Car(15, 25, '#ffa12d', true);
     track.addCarToTrack(car);
+    controlledCar = car;
 });
 
-removeCarButton.addEventListener('click', function() {
+addAIButton.addEventListener('click', function() {
+    addNewAICar();
+});
+
+restartHumanButton.addEventListener('click', function() {
+    if (!controlledCar) return;
+    track.restartCar(controlledCar);
+    setCurrentTime(0, 0, 0);
+});
+
+removeCarsButton.addEventListener('click', function() {
     track.clearTrack();
     controlledCar = null;
 });
@@ -73,6 +86,11 @@ document.addEventListener('keyup', event => {
     }
 });
 
+function addNewAICar() {
+    const car = new Car(15, 25, '#fcff2d');
+    track.addCarToTrack(car);
+}
+
 function getFastestLap() {
     const value = localStorage.getItem('fastestLap');
     return value ? parseInt(value, 10) : null;
@@ -104,37 +122,39 @@ function setCurrentTime(min, sec, ms) {
 }
 
 function sendGameStateToAI() {
-    const data = track.getCarData();
-    if (!data.length) return;
+    let carData = track.getCarData(true);
+    if (!Object.entries(carData).length) return;
     fetch('http://localhost:5000/game-state', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(carData),
     })
         .then(response => response.json())
         .then(data => applyAIAction(data))
         .catch(error => console.log('error'));
 }
 
-function applyAIAction(action) {
-    track.cars.forEach((car, index) => {
-        switch (action[index]) {
+function applyAIAction(actions) {
+    console.log('actions: ', actions);
+    for (const [carId, action] of Object.entries(actions)) {
+        const car = track.cars.find(car => car.id == carId);
+        switch (action) {
             case 'left':
-                car.setRotationSpeed(-0.2);
+                car.setRotationSpeed(-0.05);
                 break;
             case 'right':
-                car.setRotationSpeed(0.2);
+                car.setRotationSpeed(0.05);
                 break;
             case 'accelerate':
-                car.increaseSpeed(0.2);
+                car.increaseSpeed(0.3);
                 break;
-            case 'accelerate':
-                car.decreaseSpeed(0.4);
+            case 'brake':
+                car.decreaseSpeed(0.25);
                 break;
         }
-    });
+    };
 }
 
 function update() {
@@ -150,4 +170,4 @@ function update() {
 }
 
 update();
-setInterval(sendGameStateToAI, 400);
+setInterval(sendGameStateToAI, 200);
