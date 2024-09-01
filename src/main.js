@@ -5,10 +5,12 @@ let controlledCar = null;
 let keysPressed = {};
 let track = null;
 let fastestLap = getFastestLap();
+let raceStarted = false;
 
 const trackConfigUrl = '../config/config.json';
 const trackElementId = 'track';
 
+const startRaceButton = document.getElementById('startRaceButton');
 const addHumanButton = document.getElementById('addHumanButton');
 const addAIButton = document.getElementById('addAIButton');
 const restartHumanButton = document.getElementById('restartHumanButton');
@@ -30,7 +32,9 @@ addHumanButton.addEventListener('click', function() {
 });
 
 addAIButton.addEventListener('click', function() {
-    addNewAICar();
+    for (let i = 0; i < 30; i++) {
+        addNewAICar();
+    }
 });
 
 restartHumanButton.addEventListener('click', function() {
@@ -42,12 +46,28 @@ restartHumanButton.addEventListener('click', function() {
 removeCarsButton.addEventListener('click', function() {
     track.clearTrack();
     controlledCar = null;
+    raceStarted = false;
 });
 
 resetButton.addEventListener('click', function() {
     localStorage.setItem('fastestLap', null);
     track.fastestLap = null;
     updateFastestLapTime(null);
+});
+
+startRaceButton.addEventListener('click', function() {
+    console.log('click')
+    let carData = track.getCarData(true);
+    fetch('http://localhost:5000/initialize', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(carData),
+    })
+        .then(response => response.json())
+        .then(data => setupRace(data))
+        .catch(error => console.log('error'));
 });
 
 document.addEventListener('keydown', event => {
@@ -121,7 +141,16 @@ function setCurrentTime(min, sec, ms) {
     document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
+function setupRace(number_of_cars) {
+    console.log('setup race for ' + number_of_cars + ' cars');
+    for (let i = 0; i < number_of_cars; i++) {
+        addNewAICar();
+    }
+    sendGameStateToAI();
+}
+
 function sendGameStateToAI() {
+    // if (!raceStarted) return;
     let carData = track.getCarData(true);
     if (!Object.entries(carData).length) return;
     fetch('http://localhost:5000/game-state', {
@@ -170,4 +199,4 @@ function update() {
 }
 
 update();
-setInterval(sendGameStateToAI, 200);
+setInterval(sendGameStateToAI, 4000);
