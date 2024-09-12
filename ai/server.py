@@ -95,7 +95,6 @@ async def websocket_endpoint(websocket: WebSocket):
             event = data.get("event")
             event_data = data.get("data")
 
-            # Get the appropriate handler based on the event type
             handler = event_handlers.get(event)
             if handler:
                 await handler(websocket, event_data)
@@ -104,13 +103,10 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         print(f"Error in WebSocket connection: {e}")
     finally:
-        # Clean up when the client disconnects
         connected_clients.pop(websocket, None)
         thread = model_threads.pop(websocket, None)
         if thread and thread.is_alive():
-            # Ensure the thread is terminated or appropriately cleaned up
             print(f"Client disconnected. Cleaning up resources.")
-            # Implement any additional cleanup if necessary
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -38,7 +38,7 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
-            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 5)
+            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 20)
             self.save_best_genome('genome')
         except Exception as e:
             print(f"Error during population run: {e}")
@@ -96,7 +96,7 @@ class NEATCarAI:
             print(f"Error in run_generation: {e}")
     
     async def pause_action(self):
-        timeout = 5
+        timeout = 10
         await asyncio.sleep(timeout)
 
     async def send_generation_end_message(self):
@@ -121,17 +121,18 @@ class NEATCarAI:
             return None
 
         try:
-            if state['speed'] < 0.01:
-                car['genome'].fitness -= 7
-            elif state['speed'] < 0.1:
-                car['genome'].fitness -= 5
-            elif state['collision']:
-                car['genome'].fitness -= 200
+            if state['collision']:
+                car['genome'].fitness -= 500
                 del self.cars[id_]
+                return None
+            if state['speed'] < 0.1:
+                car['genome'].fitness -= 7
+            elif state['speed'] < 0.8:
+                car['genome'].fitness -= 2
             else:
                 car['genome'].fitness += 1
-
-            action = car['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed']])
+            
+            action = car['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed'], state['collision']])
 
             if action[0] > 0.8:
                 return 'accelerate'
@@ -140,6 +141,7 @@ class NEATCarAI:
             if action[0] > 0.1:
                 return 'left'
             return 'brake'
+        
         except Exception as e:
             print(f"Error while activating car {id_}: {e}")
             return None
@@ -154,6 +156,7 @@ class NEATCarAI:
                     car_data['genome'].fitness -= 1
                 elif state['collision']:
                     car_data['genome'].fitness -= 15
+                    print('DELETE')
                     del self.cars[car_id]
                 else:
                     car_data['genome'].fitness += 1

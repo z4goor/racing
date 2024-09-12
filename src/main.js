@@ -4,7 +4,7 @@ import { Track } from "./track.js";
 let socket;
 
 function connectToServer() {
-    socket = new WebSocket('ws://localhost:8000/ws'); // Replace with your server URL
+    socket = new WebSocket('ws://localhost:8000/ws');
 
     socket.onopen = function() {
         console.log('Connected to WebSocket server');
@@ -18,7 +18,6 @@ function connectToServer() {
         const paresedMessage = JSON.parse(message.data);
         const event = paresedMessage.event;
         const data = paresedMessage.data;
-        console.log('Message from server:', event, data);
         if (event == 'new_generation') {
             startRace();
         }
@@ -87,8 +86,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    socket.send(JSON.stringify({'event': 'model_init', 'data': 50})); // Sends the number of cars
-    console.log('model_init sent');
+    socket.send(JSON.stringify({'event': 'model_init', 'data': 50}));
 });
 
 
@@ -190,28 +188,24 @@ function setCurrentTime(min, sec, ms) {
 function sendGameStateToAI(event = 'game_state') {
     if (!raceStarted) return;
     let carData = track.getCarData(true);
-    Object.values(carData).forEach(car => {
-        console.log(car.sensors[3]); // Logs the entire fourth sensor object
-    });
     socket.send(JSON.stringify({'event': event, 'data': carData}));
 }
 
 function applyAIAction(actions) {
-    // console.log('actions: ', actions);
     for (const [carId, action] of Object.entries(actions)) {
         const car = track.cars.find(car => car.id == carId);
         switch (action) {
             case 'left':
-                car.setRotationSpeed(-0.3);
+                car.setRotationSpeed(-7);
                 break;
             case 'right':
-                car.setRotationSpeed(0.3);
+                car.setRotationSpeed(7);
                 break;
             case 'accelerate':
-                car.increaseSpeed(0.13);
+                car.increaseSpeed(0.2);
                 break;
             case 'brake':
-                car.decreaseSpeed(0.2);
+                car.decreaseSpeed(0.25);
                 break;
         }
     };
@@ -233,7 +227,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 200);
+}, 300);
 
 connectToServer();
 update();

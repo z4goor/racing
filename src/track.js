@@ -93,6 +93,7 @@ export class Track {
     addCarToTrack(car) {
         car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
         car.setRotation(this.initialRotation);
+        car.sensors = this.getSensorData(car);
         this.cars.push(car);
     }
 
@@ -172,8 +173,9 @@ export class Track {
         return sensorData;
     }
 
-    getCarData(skipHuman = false) {
-        const cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
+    getCarData(skipHuman = false, skipCollidedAI = true) {
+        let cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
+        cars = skipCollidedAI ? cars.filter(car => !car.collision) : cars;
     
         return cars.reduce((acc, car) => {
             acc[car.id] = {
