@@ -69,7 +69,7 @@ export class Track {
         const corners = car.corners;
         const vector = car.movementVector;
 
-        if (this.checkCollision(car.corners, vector)) return car.stop();
+        if (this.checkCollision(car.corners, vector)) return car.collide();
 
         car.move(vector);
 
@@ -171,7 +171,7 @@ export class Track {
         const cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
     
         return cars.reduce((acc, car) => {
-            acc[car.id] = { speed: car.speed, sensors: this.getSensorData(car) };
+            acc[car.id] = { speed: car.speed, sensors: this.getSensorData(car), collision: car.collision };
             return acc;
         }, {});
     }

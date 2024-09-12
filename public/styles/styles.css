@@ -61,3 +61,11 @@ button {
     position: relative;
     margin: 0 auto; /* Center the track */
 }
+
+input {
+    background-color: gray;
+}
+
+select {
+    background-color: gray;
+}

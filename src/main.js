@@ -1,6 +1,37 @@
 import { Car } from "./car.js";
 import { Track } from "./track.js";
 
+let socket;
+
+function connectToServer() {
+    socket = new WebSocket('ws://localhost:8000/ws'); // Replace with your server URL
+
+    socket.onopen = function() {
+        console.log('Connected to WebSocket server');
+    };
+
+    socket.onclose = function() {
+        console.log('Disconnected from WebSocket server');
+    };
+
+    socket.onmessage = function(message) {
+        const paresedMessage = JSON.parse(message.data);
+        const event = paresedMessage.event;
+        const data = paresedMessage.data;
+        console.log('Message from server:', event, data);
+        if (event == 'new_generation') {
+            startRace();
+        }
+        if (event == 'game_state') {
+            applyAIAction(data)
+        }
+    };
+
+    socket.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
+}
+
 let controlledCar = null;
 let keysPressed = {};
 let track = null;
@@ -56,22 +87,28 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    console.log('click')
-    let carData = track.getCarData(true);
-    fetch('http://localhost:5000/initialize', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(carData),
-    })
-        .then(response => response.json())
-        .then(data => setupRace(data))
-        .catch(error => console.log('error'));
+    socket.send(JSON.stringify({'event': 'model_init', 'data': 50})); // Sends the number of cars
+    console.log('model_init sent');
 });
+
 
 document.addEventListener('keydown', event => {
     keysPressed[event.code] = true;
+
+    switch (event.code) {
+        case 'KeyP':
+            socket.emit('message', 'duuuupsko');
+            break;
+        case 'KeyM':
+            connectToServer();
+            break;
+        case 'KeyK':
+            socket.disconnect();
+            break;
+        case 'KeyB':
+            sendGameStateToAI();
+            break;
+    }
 
     if (!controlledCar) return;
     switch (event.code) {
@@ -105,6 +142,15 @@ document.addEventListener('keyup', event => {
         controlledCar.setRotationSpeed(0);
     }
 });
+
+function startRace() {
+    track.clearTrack()
+    for (let i = 0; i < 50; i++) {
+        addNewAICar();
+    }
+    raceStarted = true;
+    sendGameStateToAI('new_generation');
+}
 
 function addNewAICar() {
     const car = new Car(15, 25, '#fcff2d');
@@ -141,46 +187,31 @@ function setCurrentTime(min, sec, ms) {
     document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
-function setupRace(number_of_cars) {
-    console.log('setup race for ' + number_of_cars + ' cars');
-    for (let i = 0; i < number_of_cars; i++) {
-        addNewAICar();
-    }
-    sendGameStateToAI();
-}
-
-function sendGameStateToAI() {
-    // if (!raceStarted) return;
+function sendGameStateToAI(event = 'game_state') {
+    if (!raceStarted) return;
     let carData = track.getCarData(true);
-    if (!Object.entries(carData).length) return;
-    fetch('http://localhost:5000/game-state', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(carData),
-    })
-        .then(response => response.json())
-        .then(data => applyAIAction(data))
-        .catch(error => console.log('error'));
+    Object.values(carData).forEach(car => {
+        console.log(car.sensors[3]); // Logs the entire fourth sensor object
+    });
+    socket.send(JSON.stringify({'event': event, 'data': carData}));
 }
 
 function applyAIAction(actions) {
-    console.log('actions: ', actions);
+    // console.log('actions: ', actions);
     for (const [carId, action] of Object.entries(actions)) {
         const car = track.cars.find(car => car.id == carId);
         switch (action) {
             case 'left':
-                car.setRotationSpeed(-0.05);
+                car.setRotationSpeed(-0.3);
                 break;
             case 'right':
-                car.setRotationSpeed(0.05);
+                car.setRotationSpeed(0.3);
                 break;
             case 'accelerate':
-                car.increaseSpeed(0.3);
+                car.increaseSpeed(0.13);
                 break;
             case 'brake':
-                car.decreaseSpeed(0.25);
+                car.decreaseSpeed(0.2);
                 break;
         }
     };
@@ -198,5 +229,11 @@ function update() {
     requestAnimationFrame(update);
 }
 
+setInterval(() => {
+    if (raceStarted) {
+        sendGameStateToAI();
+    }
+}, 200);
+
+connectToServer();
 update();
-setInterval(sendGameStateToAI, 4000);

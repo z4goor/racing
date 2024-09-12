@@ -13,6 +13,7 @@ export class Car {
         this.crossingLine = false;
         this.reverseMove = false;
         this.lapStartTime = null;
+        this.collision = false;
     }
 
     get movementVector() {
@@ -92,6 +93,11 @@ export class Car {
 
     rotate() {
         this.rotation += this.rotationSpeed * Math.PI / 180;
+    }
+
+    collide() {
+        this.stop();
+        this.collision = true;
     }
 
     stop() {
