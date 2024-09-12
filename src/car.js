@@ -14,6 +14,7 @@ export class Car {
         this.reverseMove = false;
         this.lapStartTime = null;
         this.collision = false;
+        this.sensors = {};
     }
 
     get movementVector() {

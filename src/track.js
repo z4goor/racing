@@ -61,6 +61,7 @@ export class Track {
 
         this.cars.forEach(car => {
             this.moveCar(car);
+            this.updateCarSensors(car);
             this.drawCar(car);
         });
     }
@@ -145,6 +146,10 @@ export class Track {
         return rotation >= minRotation && rotation <= maxRotation;
     }
 
+    updateCarSensors(car) {
+        car.sensors = this.getSensorData(car);
+    }
+
     getSensorData(car) {
         const sensorAngles = [-Math.PI / 2, -Math.PI / 4, 0, Math.PI / 4, Math.PI / 2];
 
@@ -171,7 +176,11 @@ export class Track {
         const cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
     
         return cars.reduce((acc, car) => {
-            acc[car.id] = { speed: car.speed, sensors: this.getSensorData(car), collision: car.collision };
+            acc[car.id] = {
+                speed: car.speed,
+                sensors: car.sensors,
+                collision: car.collision
+            };
             return acc;
         }, {});
     }
@@ -199,7 +208,7 @@ export class Track {
 
     drawSensors() {
         this.cars.forEach(car => {
-            const sensorData = this.getSensorData(car);
+            const sensorData = car.sensors;
             sensorData.forEach(({ distance, endX, endY }) => {
                 this.context.beginPath();
                 this.context.moveTo(car.x, car.y);
