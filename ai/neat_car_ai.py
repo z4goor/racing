@@ -38,7 +38,7 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
-            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 20)
+            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 70)
             self.save_best_genome('genome')
         except Exception as e:
             print(f"Error during population run: {e}")
@@ -46,14 +46,12 @@ class NEATCarAI:
     async def wait_for_car_data(self):
         async def periodic_check():
             while not self.car_data_event.is_set():
-                print(f"No data loaded from client {self.id}. Car data event status: {self.car_data_event.is_set()}")
                 await asyncio.sleep(1)
         
         check_task = asyncio.create_task(periodic_check())
 
         try:
             await self.car_data_event.wait()
-            print('Car data received, proceeding with generation.')
         finally:
             check_task.cancel()
             try:
@@ -96,8 +94,18 @@ class NEATCarAI:
             print(f"Error in run_generation: {e}")
     
     async def pause_action(self):
-        timeout = 10
-        await asyncio.sleep(timeout)
+        timeout = 30
+        interval = 1
+        total_time = 0
+
+        while total_time < timeout:
+            async with self.lock:
+                car_data = self.cars.values()
+            
+            if not self.cars or all(car.get('speed', 1) == 0 for car in car_data):
+                return
+            await asyncio.sleep(interval)
+            total_time += interval
 
     async def send_generation_end_message(self):
         try:
@@ -108,7 +116,10 @@ class NEATCarAI:
 
     async def activate(self, inputs):
         try:
-            outputs = {id_: await self.activate_car(id_, state) for id_, state in inputs.items()}
+            outputs = {
+                id_: await self.activate_car(id_, state)
+                for id_, state in inputs.items()
+            }
             return outputs
         except Exception as e:
             print(f"Error during activation: {e}")
@@ -116,53 +127,35 @@ class NEATCarAI:
     
     async def activate_car(self, id_, state):
         try:
-            car = self.cars[id_]
+            async with self.lock:
+                car = self.cars[id_]
+                self.cars[id_]['speed'] = state['speed']
+                self.cars[id_]['collision'] = state['collision']
         except KeyError:
-            return None
+            return [None, None]
 
         try:
             if state['collision']:
-                car['genome'].fitness -= 500
-                del self.cars[id_]
+                car['genome'].fitness -= 300
+                async with self.lock:
+                    del self.cars[id_]
                 return None
-            if state['speed'] < 0.1:
-                car['genome'].fitness -= 7
-            elif state['speed'] < 0.8:
+            if state['speed'] < 0.02:
+                car['genome'].fitness -= 100
+            elif state['speed'] < 0.21:
                 car['genome'].fitness -= 2
             else:
-                car['genome'].fitness += 1
+                car['genome'].fitness += 1 * state['speed']
             
-            action = car['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed'], state['collision']])
+            actions = car['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed'], state['collision']])
 
-            if action[0] > 0.8:
-                return 'accelerate'
-            if action[0] > 0.45:
-                return 'right'
-            if action[0] > 0.1:
-                return 'left'
-            return 'brake'
-        
+            return [
+                'break' if actions[0] < -0.5 else 'accelerate' if actions[0] > 0.6 else None,
+                'left' if actions[1] < -0.5 else 'right' if actions[1] > 0.5 else None,
+            ]
         except Exception as e:
             print(f"Error while activating car {id_}: {e}")
-            return None
-
-    async def evaluate_genomes(self):
-        try:
-            for car_id, car_data in self.cars.items():
-                state = car_data['state']
-                if state['speed'] < 0:
-                    car_data['genome'].fitness -= 3
-                if state['speed'] < 0.2:
-                    car_data['genome'].fitness -= 1
-                elif state['collision']:
-                    car_data['genome'].fitness -= 15
-                    print('DELETE')
-                    del self.cars[car_id]
-                else:
-                    car_data['genome'].fitness += 1
-            print('Genomes evaluated successfully.')
-        except Exception as e:
-            print(f"Error during genome evaluation: {e}")
+            return [None, None]
 
     def save_best_genome(self, file_name):
         filepath = os.path.join(os.path.dirname(__file__), 'genomes', file_name)

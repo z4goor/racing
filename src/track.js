@@ -175,7 +175,7 @@ export class Track {
 
     getCarData(skipHuman = false, skipCollidedAI = true) {
         let cars = skipHuman ? this.cars.filter(car => !car.humanControlled) : this.cars;
-        cars = skipCollidedAI ? cars.filter(car => !car.collision) : cars;
+        // cars = skipCollidedAI ? cars.filter(car => !car.collision) : cars;
     
         return cars.reduce((acc, car) => {
             acc[car.id] = {

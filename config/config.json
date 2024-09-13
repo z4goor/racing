@@ -1,11 +1,11 @@
 {
     "imageUrl": "../public/static/track001.png",
     "startLine": {
-        "p1": {"x": 303, "y": 13},
-        "p2": {"x": 303, "y": 65}
+        "p1": {"x": 403, "y": 13},
+        "p2": {"x": 403, "y": 65}
     },
     "startPoint": {
-        "x": 280,
+        "x": 380,
         "y": 40
     }
 }

@@ -86,7 +86,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    socket.send(JSON.stringify({'event': 'model_init', 'data': 50}));
+    socket.send(JSON.stringify({'event': 'model_init', 'data': 40}));
 });
 
 
@@ -111,16 +111,16 @@ document.addEventListener('keydown', event => {
     if (!controlledCar) return;
     switch (event.code) {
         case 'KeyW':
-            controlledCar.increaseSpeed(0.5);
+            controlledCar.increaseSpeed(0.2);
             break;
         case 'KeyA':
-            controlledCar.setRotationSpeed(-4.2);
+            controlledCar.setRotationSpeed(-4.5);
             break;
         case 'KeyS':
-            controlledCar.decreaseSpeed(0.8);
+            controlledCar.decreaseSpeed(0.4);
             break;
         case 'KeyD':
-            controlledCar.setRotationSpeed(4.2);
+            controlledCar.setRotationSpeed(4.5);
             break;
         case 'KeyX':
             showSensorsCheckbox.checked = !showSensorsCheckbox.checked;
@@ -143,7 +143,7 @@ document.addEventListener('keyup', event => {
 
 function startRace() {
     track.clearTrack()
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 40; i++) {
         addNewAICar();
     }
     raceStarted = true;
@@ -194,19 +194,23 @@ function sendGameStateToAI(event = 'game_state') {
 function applyAIAction(actions) {
     for (const [carId, action] of Object.entries(actions)) {
         const car = track.cars.find(car => car.id == carId);
-        switch (action) {
-            case 'left':
-                car.setRotationSpeed(-7);
-                break;
-            case 'right':
-                car.setRotationSpeed(7);
-                break;
+        switch (action[0]) {
             case 'accelerate':
-                car.increaseSpeed(0.2);
+                car.increaseSpeed(0.13);
                 break;
             case 'brake':
-                car.decreaseSpeed(0.25);
+                car.decreaseSpeed(0.2);
                 break;
+        }
+        switch (action[1]) {
+            case 'left':
+                car.setRotationSpeed(-4.5);
+                break;
+            case 'right':
+                car.setRotationSpeed(4.5);
+                break;
+            default:
+                car.setRotationSpeed(0)
         }
     };
 }
@@ -219,6 +223,9 @@ function update() {
 
     updateFastestLapTime(track.fastestLap);
     if (controlledCar) updateLapTime(controlledCar.lapStartTime);
+    if (controlledCar) {
+        console.log(controlledCar.speed);
+    }
 
     requestAnimationFrame(update);
 }
@@ -227,7 +234,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 300);
+}, 50);
 
 connectToServer();
 update();

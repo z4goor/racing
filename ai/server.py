@@ -43,7 +43,6 @@ async def handle_model_init(websocket: WebSocket, data: str):
     # Create and start a thread for this model
     def model_thread_func():
         asyncio.run(model_instance.run(pop_size))
-        print('model_thread_func DONE')
     
     model_thread = threading.Thread(target=model_thread_func, daemon=True)
     model_threads[websocket] = model_thread
@@ -53,14 +52,6 @@ async def handle_model_init(websocket: WebSocket, data: str):
     print(f"Model init event: Model initialized and associated with client")
 
 async def handle_new_generation(websocket: WebSocket, data: dict):
-    # print('handle_new_generation data:', data)
-    if not data:
-        data = {
-            "fae01211-0134-44c7-aa3a-d4e2ba2187ad":{"speed":0,"sensors":[{"distance":27,"endX":280,"endY":13},{"distance":37,"endX":306.16295090390224,"endY":13.83704909609774},{"distance":406,"endX":686,"endY":39.99999999999998},{"distance":36,"endX":305.4558441227157,"endY":65.45584412271572},{"distance":25,"endX":280,"endY":65}],"collision":False},
-            "fae01211-0134-44c7-aa3a-fmeih34ihg3f":{"speed":0,"sensors":[{"distance":27,"endX":280,"endY":13},{"distance":37,"endX":306.16295090390224,"endY":13.83704909609774},{"distance":406,"endX":686,"endY":39.99999999999998},{"distance":36,"endX":305.4558441227157,"endY":65.45584412271572},{"distance":25,"endX":280,"endY":65}],"collision":False},
-            "fae01211-0134-44c7-aa3a-fnewiubenger":{"speed":0,"sensors":[{"distance":27,"endX":280,"endY":13},{"distance":37,"endX":306.16295090390224,"endY":13.83704909609774},{"distance":406,"endX":686,"endY":39.99999999999998},{"distance":36,"endX":305.4558441227157,"endY":65.45584412271572},{"distance":25,"endX":280,"endY":65}],"collision":False},
-            "fae01211-0134-44c7-aa3a-fneiwufnewio":{"speed":0,"sensors":[{"distance":27,"endX":280,"endY":13},{"distance":37,"endX":306.16295090390224,"endY":13.83704909609774},{"distance":406,"endX":686,"endY":39.99999999999998},{"distance":36,"endX":305.4558441227157,"endY":65.45584412271572},{"distance":25,"endX":280,"endY":65}],"collision":False},
-        }
     model_instance = connected_clients.get(websocket)
     if model_instance:
         asyncio.run_coroutine_threadsafe(
