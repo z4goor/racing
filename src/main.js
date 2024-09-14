@@ -234,7 +234,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 50);
+}, 80);
 
 connectToServer();
 update();
