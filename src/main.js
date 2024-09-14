@@ -108,7 +108,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    send('model_init', 7);
+    send('model_init', 99);
     // startRace();
 
 });
@@ -167,7 +167,7 @@ document.addEventListener('keyup', event => {
 
 function startRace() {
     track.clearTrack()
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 99; i++) {
         addNewAICar();
     }
     sendGameStateToAI();
@@ -209,7 +209,6 @@ function setCurrentTime(min, sec, ms) {
 }
 
 function sendGameStateToAI() {
-    // if (!raceStarted) return;
     let carData = track.getCarData(true);
     send('game_state', carData);
 }
@@ -217,6 +216,10 @@ function sendGameStateToAI() {
 function applyAIAction(actions) {
     for (const [carId, action] of Object.entries(actions)) {
         const car = track.cars.find(car => car.id == carId);
+        if (!car) {
+            continue
+        }        
+        console.log(carId, action, car.speed);
         switch (action[0]) {
             case 'accelerate':
                 car.increaseSpeed(0.13);
@@ -239,7 +242,9 @@ function applyAIAction(actions) {
 }
 
 function update() {
+    // console.time('track update');
     track.update();
+    // console.timeEnd('track update');
 
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();

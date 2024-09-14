@@ -37,7 +37,7 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
-            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 60)
+            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 80)
             self.save_best_genome('genome')
         except Exception as e:
             print(f"Error during population run: {e}")
@@ -51,7 +51,7 @@ class NEATCarAI:
     def run_generation(self, genomes, config):
         try:
             asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop).result()
-            # asyncio.run_coroutine_threadsafe(self.data_check(), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.data_check(), self.loop).result()
             asyncio.run_coroutine_threadsafe(self.pause_action(), self.loop).result()
             asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop).result()
         except Exception as e:
@@ -84,8 +84,8 @@ class NEATCarAI:
             print('DATA CHECK', status)
     
     async def pause_action(self):
-        timeout = 12
-        interval = 0.2
+        timeout = 40
+        interval = 0.1
         total_time = 0
 
         while total_time < timeout:
@@ -97,31 +97,34 @@ class NEATCarAI:
             
             actions = {}
             for car_id, state in self.car_states.items():
-                await self.evaluate_genome(car_id, state)
-                actions[car_id] = await self.activate_car(car_id, state)
+                collision = await self.evaluate_genome(car_id, state)
+                if collision:
+                    actions[car_id] = await self.activate_car(car_id, state)
             if actions:
                 await self.send_car_action(actions)
-
+            
             await asyncio.sleep(interval)
             total_time += interval
 
     async def evaluate_genome(self, car_id, state):
         async with self.lock:
-            try:
-                car = self.genomes.get(car_id).copy()
-            except Exception as e:
-                print(f'cannot get id {car_id} from genomes {list(self.genomes.keys())}')
-        if not car:
-            return
+            car = self.genomes.get(car_id)
+            if not car:
+                return False
+            car = car.copy()
         
         if state['collision']:
             car['genome'].fitness -= 300
+            async with self.lock:
+                del self.genomes[car_id]
+                return False
         elif state['speed'] < 0.02:
             car['genome'].fitness -= 10
         elif state['speed'] < 0.21:
             car['genome'].fitness -= 1
         else:
             car['genome'].fitness += state['speed'] / 2
+        return True
 
     async def send_car_action(self, actions):
         try:
@@ -141,8 +144,13 @@ class NEATCarAI:
             self.car_states.clear()
     
     async def activate_car(self, id_, state):
+        async with self.lock:
+            try:
+                genome = self.genomes[id_]
+            except Exception:
+                return
         try:
-            actions = self.genomes[id_]['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed']])
+            actions = genome['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed']])
 
             return [
                 'break' if actions[0] < -0.5 else 'accelerate' if actions[0] > 0.5 else None,
