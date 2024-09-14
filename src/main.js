@@ -222,10 +222,10 @@ function applyAIAction(actions) {
         console.log(carId, action, car.speed);
         switch (action[0]) {
             case 'accelerate':
-                car.increaseSpeed(0.13);
+                car.increaseSpeed(0.09);
                 break;
             case 'brake':
-                car.decreaseSpeed(0.2);
+                car.decreaseSpeed(0.13);
                 break;
         }
         switch (action[1]) {
@@ -262,7 +262,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 120);
+}, 50);
 
 connectToServer();
 update();
