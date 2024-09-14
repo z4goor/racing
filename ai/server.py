@@ -34,45 +34,39 @@ async def handle_message(websocket: WebSocket, data: str):
     print(f"Message event: Broadcasted message '{data}'")
 
 async def handle_model_init(websocket: WebSocket, data: str):
-    pop_size = 50  # Default population size if not provided
-    
-    # Create a new NEATCarAI instance
     model_instance = NEATCarAI(CONFIG_PATH, socket=websocket)
     connected_clients[websocket] = model_instance
     
-    # Create and start a thread for this model
     def model_thread_func():
-        asyncio.run(model_instance.run(pop_size))
+        asyncio.run(model_instance.run(data))
     
     model_thread = threading.Thread(target=model_thread_func, daemon=True)
     model_threads[websocket] = model_thread
     model_thread.start()
     
     await websocket.send_json({'event': 'model_init', 'data': 'success'})
-    print(f"Model init event: Model initialized and associated with client")
 
-async def handle_new_generation(websocket: WebSocket, data: dict):
-    model_instance = connected_clients.get(websocket)
-    if model_instance:
-        asyncio.run_coroutine_threadsafe(
-            model_instance.update_car_data(data, "client_id_placeholder"),
-            asyncio.get_event_loop()
-        )
+# async def handle_new_generation(websocket: WebSocket, data: dict):
+#     model_instance = connected_clients.get(websocket)
+#     if model_instance:
+#         asyncio.run_coroutine_threadsafe(
+#             model_instance.update_car_data(data, "client_id_placeholder"),
+#             asyncio.get_event_loop()
+#         )
 
 async def handle_game_state(websocket: WebSocket, data: str):
     model_instance = connected_clients.get(websocket)
     if model_instance:
-        output = await asyncio.create_task(
-            model_instance.activate(data)
+        await asyncio.create_task(
+            model_instance.update_car_data(data, 'cipa')
         )
-    await websocket.send_json({"event": "game_state", "data": output})
 
 # Dictionary mapping event types to handler functions
 event_handlers = {
     "ping": handle_ping,
     "message": handle_message,
     "model_init": handle_model_init,
-    "new_generation": handle_new_generation,
+    # "new_generation": handle_new_generation,
     "game_state": handle_game_state,
 }
 

@@ -19,16 +19,38 @@ function connectToServer() {
         const event = paresedMessage.event;
         const data = paresedMessage.data;
         if (event == 'new_generation') {
-            startRace();
+            startGeneration();
+        }
+        if (event == 'car_action') {
+            applyAIAction(data);
         }
         if (event == 'game_state') {
-            applyAIAction(data)
+            sendGameStateToAI();
+        }
+        if (event == 'start') {
+            raceStarted = true;
+        }
+        if (event == 'stop') {
+            stopGeneration();
         }
     };
 
     socket.onerror = function(error) {
         console.error('WebSocket error:', error);
     };
+}
+
+function send(event, data) {
+    socket.send(JSON.stringify({'event': event, 'data': data}));
+}
+
+function startGeneration() {
+    startRace();
+}
+
+function stopGeneration() {
+    track.clearTrack();
+    raceStarted = false;
 }
 
 let controlledCar = null;
@@ -86,7 +108,9 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    socket.send(JSON.stringify({'event': 'model_init', 'data': 40}));
+    send('model_init', 7);
+    // startRace();
+
 });
 
 
@@ -143,11 +167,10 @@ document.addEventListener('keyup', event => {
 
 function startRace() {
     track.clearTrack()
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 7; i++) {
         addNewAICar();
     }
-    raceStarted = true;
-    sendGameStateToAI('new_generation');
+    sendGameStateToAI();
 }
 
 function addNewAICar() {
@@ -185,10 +208,10 @@ function setCurrentTime(min, sec, ms) {
     document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
-function sendGameStateToAI(event = 'game_state') {
-    if (!raceStarted) return;
+function sendGameStateToAI() {
+    // if (!raceStarted) return;
     let carData = track.getCarData(true);
-    socket.send(JSON.stringify({'event': event, 'data': carData}));
+    send('game_state', carData);
 }
 
 function applyAIAction(actions) {
@@ -234,7 +257,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 80);
+}, 120);
 
 connectToServer();
 update();
