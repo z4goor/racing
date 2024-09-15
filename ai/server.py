@@ -5,13 +5,12 @@ import asyncio
 import threading
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from neat_car_ai import NEATCarAI  # Import your NEATCarAI class
+from neat_car_ai import NEATCarAI
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.txt')
 
 app = FastAPI()
 
-# CORS settings
 origins = ["http://localhost:5500"]
 app.add_middleware(
     CORSMiddleware,
@@ -21,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store connected clients and their associated NEATCarAI instances
 connected_clients = {}
 model_threads = {}
 
@@ -46,14 +44,6 @@ async def handle_model_init(websocket: WebSocket, data: str):
     
     await websocket.send_json({'event': 'model_init', 'data': 'success'})
 
-# async def handle_new_generation(websocket: WebSocket, data: dict):
-#     model_instance = connected_clients.get(websocket)
-#     if model_instance:
-#         asyncio.run_coroutine_threadsafe(
-#             model_instance.update_car_data(data, "client_id_placeholder"),
-#             asyncio.get_event_loop()
-#         )
-
 async def handle_game_state(websocket: WebSocket, data: str):
     model_instance = connected_clients.get(websocket)
     if model_instance:
@@ -61,12 +51,10 @@ async def handle_game_state(websocket: WebSocket, data: str):
             model_instance.update_car_data(data, 'cipa')
         )
 
-# Dictionary mapping event types to handler functions
 event_handlers = {
     "ping": handle_ping,
     "message": handle_message,
     "model_init": handle_model_init,
-    # "new_generation": handle_new_generation,
     "game_state": handle_game_state,
 }
 

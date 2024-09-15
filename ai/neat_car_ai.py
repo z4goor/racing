@@ -37,7 +37,7 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
-            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 40)
+            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 400)
             self.save_best_genome('genome')
         except Exception as e:
             print(f"Error during population run: {e}")
@@ -45,13 +45,10 @@ class NEATCarAI:
     async def update_car_data(self, car_data, client_id):
         async with self.lock:
             self.car_states = car_data
-        if not self.car_states:
-            print('ALARM - NO SELF.CAR_STATES AFTER UPDATE')
 
     def run_generation(self, genomes, config):
         try:
             asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop).result()
-            asyncio.run_coroutine_threadsafe(self.data_check(), self.loop).result()
             asyncio.run_coroutine_threadsafe(self.pause_action(), self.loop).result()
             asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop).result()
         except Exception as e:
@@ -61,12 +58,10 @@ class NEATCarAI:
         for _, genome in genomes:
             genome.fitness = 0
         
-        await self.sio.send_json({'event': 'new_generation', 'data': 'LETSGO'})
+        await self.sio.send_json({'event': 'new_generation', 'data': len(genomes)})
         
         while not self.car_states:
-            print('waiting for car states')
-            await asyncio.sleep(0.2)
-        print('CAR STATES FOUND', len(self.car_states))
+            await asyncio.sleep(0.05)
         
         async with self.lock:
             self.genomes = {
@@ -78,15 +73,10 @@ class NEATCarAI:
             }
         await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
     
-    async def data_check(self):
-        async with self.lock:
-            status = set(self.genomes.keys()) == set(self.car_states.keys())
-            print('DATA CHECK', status)
-    
     async def pause_action(self):
         timeout = 30
-        interval = 0.1
-        time_threshold = 5
+        interval = 0.017
+        time_threshold = 3
         total_time = 0
 
         while total_time < timeout:

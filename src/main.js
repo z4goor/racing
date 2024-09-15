@@ -19,7 +19,7 @@ function connectToServer() {
         const event = paresedMessage.event;
         const data = paresedMessage.data;
         if (event == 'new_generation') {
-            startGeneration();
+            startGeneration(data);
         }
         if (event == 'car_action') {
             applyAIAction(data);
@@ -31,7 +31,8 @@ function connectToServer() {
             raceStarted = true;
         }
         if (event == 'stop') {
-            stopGeneration();
+            track.clearTrack();
+            raceStarted = false;
         }
     };
 
@@ -44,13 +45,8 @@ function send(event, data) {
     socket.send(JSON.stringify({'event': event, 'data': data}));
 }
 
-function startGeneration() {
-    startRace();
-}
-
-function stopGeneration() {
-    track.clearTrack();
-    raceStarted = false;
+function startGeneration(n) {
+    startRace(n);
 }
 
 let controlledCar = null;
@@ -163,9 +159,9 @@ document.addEventListener('keyup', event => {
     }
 });
 
-function startRace() {
+function startRace(n) {
     track.clearTrack()
-    for (let i = 0; i < 999; i++) {
+    for (let i = 0; i < n; i++) {
         addNewAICar();
     }
     sendGameStateToAI();
@@ -207,8 +203,9 @@ function setCurrentTime(min, sec, ms) {
 }
 
 function sendGameStateToAI() {
-    let carData = track.getCarData(true);
-    send('game_state', carData);
+    // console.time('sending');
+    send('game_state', track.getCarData(true));
+    // console.timeEnd('sending');
 }
 
 function applyAIAction(actions) {
@@ -216,8 +213,7 @@ function applyAIAction(actions) {
         const car = track.cars.find(car => car.id == carId);
         if (!car) {
             continue
-        }        
-        // console.log(carId, action, car.speed);
+        }
         switch (action[0]) {
             case 'accelerate':
                 car.increaseSpeed(0.09);
@@ -240,18 +236,15 @@ function applyAIAction(actions) {
 }
 
 function update() {
-    console.time('track update');
+    // console.time('track update');
     track.update();
-    console.timeEnd('track update');
+    // console.timeEnd('track update');
 
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();
 
     updateFastestLapTime(track.fastestLap);
     if (controlledCar) updateLapTime(controlledCar.lapStartTime);
-    if (controlledCar) {
-        console.log(controlledCar.speed);
-    }
 
     requestAnimationFrame(update);
 }
@@ -260,7 +253,7 @@ setInterval(() => {
     if (raceStarted) {
         sendGameStateToAI();
     }
-}, 50);
+}, 18);
 
 connectToServer();
 update();
