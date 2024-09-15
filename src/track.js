@@ -92,27 +92,58 @@ export class Track {
     moveCar(car) {
         const corners = car.corners;
         const vector = car.movementVector;
-
+    
         if (this.checkCollision(car.corners, vector)) return car.collide();
 
         car.move(vector);
 
-        if (!this.isCarCrossingLine(corners)) return car.setCrossingLine(false);
-
-        if (car.crossingLine) return;
-
-        car.setCrossingLine(true);
+        if (!this.isAnyCornerCrossingLine(corners, vector)) {
+            return;
+        }
+    
+        if (this.isStartLineBetweenFrontAndRear(corners)) return;
         
-        if (!this.checkAppropriateDirection(car)) return car.setReverseMove(true);
+        if (!this.checkAppropriateDirection(car)) {
+            return car.setReverseMove(true);
+        }
 
-        if (car.reverseMove) return car.setReverseMove(false);
-
+        if (car.reverseMove) {
+            car.setReverseMove(false);
+            return;
+        }
         const previousLapTime = car.startLap();
         if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
             this.fastestLap = previousLapTime;
         }
     }
 
+    isAnyCornerCrossingLine(corners, vector) {
+        const { p1, p2 } = this.startLine;
+    
+        return corners.some(corner => {
+            const movedCorner = {
+                x: corner.x + vector.x,
+                y: corner.y + vector.y
+            };
+    
+            return this.isLineIntersect(corner, movedCorner, p1, p2);
+        });
+    }
+
+    isStartLineBetweenFrontAndRear(corners) {
+        const { p1, p2 } = this.startLine;
+        const lineStart = { x: p1.x, y: p1.y };
+        const lineEnd = { x: p2.x, y: p2.y };
+    
+        const frontLeft = corners[0];
+        const rearRight = corners[3];
+        const rearLeft = corners[2];
+        const frontRight = corners[1];
+    
+        return this.isLineIntersect(frontLeft, rearRight, lineStart, lineEnd) ||
+               this.isLineIntersect(rearLeft, frontRight, lineStart, lineEnd);
+    }
+    
     addCarToTrack(car) {
         car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
         car.setRotation(this.initialRotation);
@@ -141,16 +172,6 @@ export class Track {
 
     isCollision(point, vector = { x: 0, y: 0}) {
         return this.array[Math.floor(point.y + vector.y)][Math.floor(point.x + vector.x)] == 1
-    }
-
-    isCarCrossingLine(carCorners) {
-        const { p1, p2 } = this.startLine;
-        const lineStart = { x: p1.x, y: p1.y };
-        const lineEnd = { x: p2.x, y: p2.y };
-        return this.isLineIntersect(carCorners[0], carCorners[1], lineStart, lineEnd) ||
-               this.isLineIntersect(carCorners[1], carCorners[2], lineStart, lineEnd) ||
-               this.isLineIntersect(carCorners[2], carCorners[3], lineStart, lineEnd) ||
-               this.isLineIntersect(carCorners[3], carCorners[0], lineStart, lineEnd);
     }
 
     isLineIntersect(p1, p2, q1, q2) {

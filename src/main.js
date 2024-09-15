@@ -129,16 +129,16 @@ document.addEventListener('keydown', event => {
     if (!controlledCar) return;
     switch (event.code) {
         case 'KeyW':
-            controlledCar.increaseSpeed(0.2);
+            controlledCar.increaseSpeed(0.6);
             break;
         case 'KeyA':
-            controlledCar.setRotationSpeed(-4.5);
+            controlledCar.setRotationSpeed(-4);
             break;
         case 'KeyS':
-            controlledCar.decreaseSpeed(0.4);
+            controlledCar.decreaseSpeed(0.8);
             break;
         case 'KeyD':
-            controlledCar.setRotationSpeed(4.5);
+            controlledCar.setRotationSpeed(4);
             break;
         case 'KeyX':
             showSensorsCheckbox.checked = !showSensorsCheckbox.checked;

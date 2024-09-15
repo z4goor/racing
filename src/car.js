@@ -10,7 +10,6 @@ export class Car {
         this.speed = 0;
         this.rotation = 0;
         this.rotationSpeed = 0;
-        this.crossingLine = false;
         this.reverseMove = false;
         this.lapStartTime = null;
         this.collision = false;
@@ -76,10 +75,6 @@ export class Car {
 
     setRotation(rotation) {
         this.rotation = rotation;
-    }
-
-    setCrossingLine(bool) {
-        this.crossingLine = bool;
     }
 
     setReverseMove(bool) {
