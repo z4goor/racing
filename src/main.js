@@ -107,14 +107,10 @@ startRaceButton.addEventListener('click', function() {
     send('model_init', 999);
 });
 
-
 document.addEventListener('keydown', event => {
     keysPressed[event.code] = true;
 
     switch (event.code) {
-        case 'KeyP':
-            socket.emit('message', 'duuuupsko');
-            break;
         case 'KeyM':
             connectToServer();
             break;
@@ -132,13 +128,13 @@ document.addEventListener('keydown', event => {
             controlledCar.increaseSpeed(0.6);
             break;
         case 'KeyA':
-            controlledCar.setRotationSpeed(-4);
+            controlledCar.setRotationSpeed(-4.5);
             break;
         case 'KeyS':
             controlledCar.decreaseSpeed(0.8);
             break;
         case 'KeyD':
-            controlledCar.setRotationSpeed(4);
+            controlledCar.setRotationSpeed(4.5);
             break;
         case 'KeyX':
             showSensorsCheckbox.checked = !showSensorsCheckbox.checked;
@@ -255,5 +251,5 @@ setInterval(() => {
     }
 }, 18);
 
-connectToServer();
+// connectToServer();
 update();

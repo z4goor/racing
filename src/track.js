@@ -63,12 +63,16 @@ export class Track {
         }
     }
 
-    calculateInitialRotation(startLine) {        
-        const dx = startLine.p2.x - startLine.p1.x;
-        const dy = startLine.p2.y - startLine.p1.y;
-        const angleDegrees = Math.atan2(dx, -dy);        
-        return (angleDegrees - Math.PI / 2) % Math.PI;
-    }
+    calculateInitialRotation(startLine) {
+        const lineMidpoint = {
+            x: (startLine.p1.x + startLine.p2.x) / 2,
+            y: (startLine.p1.y + startLine.p2.y) / 2
+        };
+        const dx = lineMidpoint.x - this.config.startPoint.x;
+        const dy = lineMidpoint.y - this.config.startPoint.y;
+        const angle = Math.atan2(dy, dx);
+        return ((angle + 2 * Math.PI) % (2 * Math.PI)) + Math.PI / 2;
+    }    
 
     loadTrackImage() {
         this.image.src = this.config.imageUrl;
@@ -92,30 +96,48 @@ export class Track {
     moveCar(car) {
         const corners = car.corners;
         const vector = car.movementVector;
-    
+        
         if (this.checkCollision(car.corners, vector)) return car.collide();
-
+        
         car.move(vector);
-
+        
         if (!this.isAnyCornerCrossingLine(corners, vector)) {
             return;
         }
     
-        if (this.isStartLineBetweenFrontAndRear(corners)) return;
-        
-        if (!this.checkAppropriateDirection(car)) {
-            return car.setReverseMove(true);
+        const { p1, p2 } = this.startLine;
+        const carPosition = { x: car.x, y: car.y };
+        const startPoint = this.config.startPoint;
+    
+        if (this.isSameSideOfLine(p1, p2, carPosition, startPoint)) {
+            if (!this.isStartLineBetweenFrontAndRear(corners)) {
+                if (this.checkAppropriateDirection(car)) {
+                    if (!car.reverseMove) {
+                        const previousLapTime = car.startLap();
+                        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
+                            this.fastestLap = previousLapTime;
+                        }
+                    } else {
+                        car.setReverseMove(false);
+                    }
+                } else {
+                    car.setReverseMove(true);
+                }
+            }
+        } else {
+            if (!this.isStartLineBetweenFrontAndRear(corners)) {
+                if (!this.checkAppropriateDirection(car)) {
+                    if (!car.reverseMove) {
+                        car.setReverseMove(true);
+                    } else {
+                        car.setReverseMove(false);
+                    }
+                } else {
+                    car.setReverseMove(false);
+                }
+            }
         }
-
-        if (car.reverseMove) {
-            car.setReverseMove(false);
-            return;
-        }
-        const previousLapTime = car.startLap();
-        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
-            this.fastestLap = previousLapTime;
-        }
-    }
+    }    
 
     isAnyCornerCrossingLine(corners, vector) {
         const { p1, p2 } = this.startLine;
@@ -129,6 +151,20 @@ export class Track {
             return this.isLineIntersect(corner, movedCorner, p1, p2);
         });
     }
+
+    isSameSideOfLine(p1, p2, pointA, pointB) {
+        // Define a function to compute the cross product
+        function crossProduct(p1, p2, point) {
+            return (p2.x - p1.x) * (point.y - p1.y) - (p2.y - p1.y) * (point.x - p1.x);
+        }
+    
+        // Compute cross products
+        const cp1 = crossProduct(p1, p2, pointA);
+        const cp2 = crossProduct(p1, p2, pointB);
+    
+        // Check if both cross products have the same sign (either both positive or both negative)
+        return (cp1 * cp2 >= 0);
+    }    
 
     isStartLineBetweenFrontAndRear(corners) {
         const { p1, p2 } = this.startLine;
@@ -183,10 +219,12 @@ export class Track {
     }
 
     checkAppropriateDirection(car) {
-        const minRotation = this.initialRotation - Math.PI / 2;
-        const maxRotation = this.initialRotation + Math.PI / 2;
-        const rotation = car.rotation % Math.PI * Math.sign(car.speed);
-        return rotation >= minRotation && rotation <= maxRotation;
+        const normalizeAngle = (angle) => (angle % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        const carRotation = normalizeAngle(car.rotation * Math.sign(car.speed));
+        const trackRotation = normalizeAngle(this.initialRotation);
+        const angleDifference = Math.abs(carRotation - trackRotation);
+        const adjustedDifference = Math.min(angleDifference, 2 * Math.PI - angleDifference);    
+        return adjustedDifference <= Math.PI / 2;
     }
 
     updateCarSensors(car) {
