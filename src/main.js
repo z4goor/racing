@@ -59,7 +59,7 @@ let track = null;
 let fastestLap = getFastestLap();
 let raceStarted = false;
 
-const trackConfigUrl = '../config/config.json';
+const trackConfigUrl = '../config/config001.json';
 const trackElementId = 'track';
 
 const startRaceButton = document.getElementById('startRaceButton');
@@ -108,9 +108,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    send('model_init', 99);
-    // startRace();
-
+    send('model_init', 999);
 });
 
 
@@ -167,7 +165,7 @@ document.addEventListener('keyup', event => {
 
 function startRace() {
     track.clearTrack()
-    for (let i = 0; i < 99; i++) {
+    for (let i = 0; i < 999; i++) {
         addNewAICar();
     }
     sendGameStateToAI();
@@ -219,7 +217,7 @@ function applyAIAction(actions) {
         if (!car) {
             continue
         }        
-        console.log(carId, action, car.speed);
+        // console.log(carId, action, car.speed);
         switch (action[0]) {
             case 'accelerate':
                 car.increaseSpeed(0.09);
@@ -242,9 +240,9 @@ function applyAIAction(actions) {
 }
 
 function update() {
-    // console.time('track update');
+    console.time('track update');
     track.update();
-    // console.timeEnd('track update');
+    console.timeEnd('track update');
 
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();

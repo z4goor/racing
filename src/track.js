@@ -9,6 +9,7 @@ export class Track {
         this.config = null;
         this.startLine = null;
         this.initialRotation = null;
+        this.array = null;
         this.cars = [];
 
         this.initialize();
@@ -24,6 +25,31 @@ export class Track {
         this.canvas.width = this.trackElement.clientWidth;
         this.canvas.height = this.trackElement.clientHeight;
         this.trackElement.appendChild(this.canvas);
+    }
+
+    preprocessTrackData() {
+        const trackWidth = this.canvas.width;
+        const trackHeight = this.canvas.height;
+        const imageData = this.context.getImageData(0, 0, trackWidth, trackHeight);
+        const data = imageData.data;
+        const trackArray = [];
+    
+        for (let y = 0; y < trackHeight; y++) {
+            const row = [];
+            for (let x = 0; x < trackWidth; x++) {
+                const index = (y * trackWidth + x) * 4;
+                const r = data[index];
+                const g = data[index + 1];
+                const b = data[index + 2];
+                if (r === 0 && g === 0 && b === 0) {
+                    row.push(1);
+                } else {
+                    row.push(0);
+                }
+            }
+            trackArray.push(row);
+        }
+        return trackArray;
     }
 
     async loadConfig() {
@@ -47,12 +73,9 @@ export class Track {
     loadTrackImage() {
         this.image.src = this.config.imageUrl;
         this.image.onload = () => {
-            this.drawTrackImage();
+            this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+            this.array = this.preprocessTrackData();
         };
-    }
-
-    drawTrackImage() {
-        this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
     }
 
     update() {
@@ -117,9 +140,7 @@ export class Track {
     }
 
     isCollision(point, vector = { x: 0, y: 0}) {
-        const imageData = this.context.getImageData(point.x + vector.x, point.y + vector.y, 1, 1);
-        const [r, g, b] = imageData.data;
-        return r === 0 && g === 0 && b === 0;
+        return this.array[Math.floor(point.y + vector.y)][Math.floor(point.x + vector.x)] == 1
     }
 
     isCarCrossingLine(carCorners) {
