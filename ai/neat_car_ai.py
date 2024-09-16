@@ -165,18 +165,18 @@ class NEATCarAI:
             print(f'Best genome saved to {filepath}')
         except Exception as e:
             print(f"Error saving best genome: {e}")
-
-    def load_best_genome(self, file_name):
+    
+    @staticmethod
+    def load_best_genome(file_name):
         filepath = os.path.join(os.path.dirname(__file__), 'genomes', file_name)
         try:
             with open(filepath, 'rb') as f:
-                self.best_genome = pickle.load(f)
+                return pickle.load(f)
             print(f'Best genome loaded from {filepath}')
         except Exception as e:
             print(f"Error loading best genome: {e}")
 
 
 if __name__ == '__main__':
-    neat = NEATCarAI(os.path.join(os.path.dirname(__file__), 'config.txt'), None)
-    neat.load_best_genome('genome')
-    print(neat.best_genome)    
+    import json
+    print(json.dumps(NEATCarAI.load_best_genome('genome_5142')))

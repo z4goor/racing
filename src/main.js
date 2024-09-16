@@ -80,9 +80,8 @@ addHumanButton.addEventListener('click', function() {
 });
 
 addAIButton.addEventListener('click', function() {
-    for (let i = 0; i < 30; i++) {
-        addNewAICar();
-    }
+    const car = new Car(15, 25, '#fcff2d');
+    track.addCarToTrack(car);
 });
 
 restartHumanButton.addEventListener('click', function() {
@@ -161,11 +160,6 @@ function startRace(n) {
         addNewAICar();
     }
     sendGameStateToAI();
-}
-
-function addNewAICar() {
-    const car = new Car(15, 25, '#fcff2d');
-    track.addCarToTrack(car);
 }
 
 function getFastestLap() {
