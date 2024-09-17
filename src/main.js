@@ -103,7 +103,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    send('model_init', 999);
+    send('model_init', 20);
 });
 
 document.addEventListener('keydown', event => {
@@ -160,6 +160,11 @@ function startRace(n) {
         addNewAICar();
     }
     sendGameStateToAI();
+}
+
+function addNewAICar() {
+    const car = new Car(15, 25, '#fcff2d');
+    track.addCarToTrack(car);
 }
 
 function getFastestLap() {

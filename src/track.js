@@ -137,7 +137,7 @@ export class Track {
                 }
             }
         }
-    }    
+    }
 
     isAnyCornerCrossingLine(corners, vector) {
         const { p1, p2 } = this.startLine;
@@ -153,16 +153,12 @@ export class Track {
     }
 
     isSameSideOfLine(p1, p2, pointA, pointB) {
-        // Define a function to compute the cross product
         function crossProduct(p1, p2, point) {
             return (p2.x - p1.x) * (point.y - p1.y) - (p2.y - p1.y) * (point.x - p1.x);
         }
-    
-        // Compute cross products
+
         const cp1 = crossProduct(p1, p2, pointA);
         const cp2 = crossProduct(p1, p2, pointB);
-    
-        // Check if both cross products have the same sign (either both positive or both negative)
         return (cp1 * cp2 >= 0);
     }    
 
@@ -270,7 +266,7 @@ export class Track {
         this.context.save();
         this.context.translate(car.x, car.y);
         this.context.rotate(car.rotation);
-        this.context.fillStyle = car.color;
+        this.context.fillStyle = (car.collision && car.speed == 0) ? '#C6C5A4' : car.color;
         this.context.fillRect(-car.width / 2, -car.height / 2, car.width, car.height);
         this.context.restore();
     }

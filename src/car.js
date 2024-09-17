@@ -94,7 +94,6 @@ export class Car {
     collide() {
         this.stop();
         this.collision = true;
-        this.color = '#C6C5A4';
     }
 
     stop() {
