@@ -9,12 +9,12 @@ function connectToServer() {
 
         socket.onopen = function() {
             console.log('Connected to WebSocket server');
-            resolve(); // Resolve the promise when the connection opens
+            resolve();
         };
 
         socket.onerror = function(error) {
             console.error('WebSocket error:', error);
-            reject(error); // Reject the promise if there's an error
+            reject(error);
         };
 
         socket.onclose = function() {
@@ -223,7 +223,7 @@ function sendGameStateToAI() {
 function applyAIAction(actions) {
     for (const [carId, action] of Object.entries(actions)) {
         const car = track.cars.find(car => car.id == carId);
-        if (!car) {
+        if (!car || car.collision) {
             continue
         }
 

@@ -129,11 +129,7 @@ export class Track {
                 if (!this.checkAppropriateDirection(car)) {
                     if (!car.reverseMove) {
                         car.setReverseMove(true);
-                    } else {
-                        car.setReverseMove(false);
                     }
-                } else {
-                    car.setReverseMove(false);
                 }
             }
         }
