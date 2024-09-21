@@ -4,41 +4,42 @@ import { Track } from "./track.js";
 let socket;
 
 function connectToServer() {
-    socket = new WebSocket('ws://localhost:8000/ws');
+    return new Promise((resolve, reject) => {
+        socket = new WebSocket('ws://localhost:8000/ws');
 
-    socket.onopen = function() {
-        console.log('Connected to WebSocket server');
-    };
+        socket.onopen = function() {
+            console.log('Connected to WebSocket server');
+            resolve(); // Resolve the promise when the connection opens
+        };
 
-    socket.onclose = function() {
-        console.log('Disconnected from WebSocket server');
-    };
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            reject(error); // Reject the promise if there's an error
+        };
 
-    socket.onmessage = function(message) {
-        const paresedMessage = JSON.parse(message.data);
-        const event = paresedMessage.event;
-        const data = paresedMessage.data;
-        if (event == 'new_generation') {
-            startGeneration(data);
-        }
-        if (event == 'car_action') {
-            applyAIAction(data);
-        }
-        if (event == 'game_state') {
-            sendGameStateToAI();
-        }
-        if (event == 'start') {
-            raceStarted = true;
-        }
-        if (event == 'stop') {
-            track.clearTrack();
-            raceStarted = false;
-        }
-    };
+        socket.onclose = function() {
+            console.log('Disconnected from WebSocket server');
+        };
 
-    socket.onerror = function(error) {
-        console.error('WebSocket error:', error);
-    };
+        socket.onmessage = function(message) {
+            const parsedMessage = JSON.parse(message.data);
+            const event = parsedMessage.event;
+            const data = parsedMessage.data;
+
+            if (event === 'new_generation') {
+                startGeneration(data);
+            } else if (event === 'car_action') {
+                applyAIAction(data);
+            } else if (event === 'game_state') {
+                sendGameStateToAI();
+            } else if (event === 'start') {
+                raceStarted = true;
+            } else if (event === 'stop') {
+                track.clearTrack();
+                raceStarted = false;
+            }
+        };
+    });
 }
 
 function send(event, data) {
@@ -59,6 +60,8 @@ const trackConfigUrl = '../config/config001.json';
 const trackElementId = 'track';
 
 const startRaceButton = document.getElementById('startRaceButton');
+const sidebar = document.getElementById('sidebar');
+const startRaceSubmitButton = document.getElementById('startRaceSubmitButton');
 const addHumanButton = document.getElementById('addHumanButton');
 const addAIButton = document.getElementById('addAIButton');
 const restartHumanButton = document.getElementById('restartHumanButton');
@@ -103,7 +106,21 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    send('model_init', 20);
+    sidebar.classList.toggle('show');
+});
+
+startRaceSubmitButton.addEventListener('click', async function() {
+    const generationSize = document.getElementById('generationSize').value;
+    const numGenerations = document.getElementById('numGenerations').value;
+
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        console.log('Connecting to server...');
+        await connectToServer();
+    }
+
+    send('model_init', { generationSize: parseInt(generationSize), numGenerations: parseInt(numGenerations) });
+
+    sidebar.classList.remove('show');
 });
 
 document.addEventListener('keydown', event => {

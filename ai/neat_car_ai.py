@@ -30,15 +30,15 @@ class NEATCarAI:
             config_path
         )
     
-    async def run(self, pop_size):
-        self.config.pop_size = pop_size
+    async def run(self, data):
+        self.config.pop_size = data['generationSize']
         self.population = neat.Population(self.config)
         self.population.add_reporter(neat.StdOutReporter(True))
         self.stats = neat.StatisticsReporter()
         self.population.add_reporter(self.stats)
 
         try:
-            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, 400)
+            self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, data['numGenerations'])
             self.save_best_genome('genome')
         except Exception as e:
             print(f"Error during population run: {e}")
@@ -75,7 +75,7 @@ class NEATCarAI:
         await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
     
     async def pause_action(self):
-        timeout = 30
+        timeout = 3
         interval = 0.017
         time_threshold = 3
         total_time = 0
