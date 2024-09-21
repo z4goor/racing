@@ -1,6 +1,7 @@
 import asyncio
 import neat
 import os
+import time
 import pickle
 
 class NEATCarAI:
@@ -80,6 +81,7 @@ class NEATCarAI:
         total_time = 0
 
         while total_time < timeout:
+            start_time = time.time()
             async with self.lock:
                 car_data = list(self.car_states.values())
             
@@ -100,7 +102,7 @@ class NEATCarAI:
             if actions:
                 await self.send_car_action(actions)
             
-            await asyncio.sleep(interval)
+            await asyncio.sleep(interval - (time.time() - start_time))
             total_time += interval
 
     async def evaluate_genome(self, car_id, state):
