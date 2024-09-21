@@ -123,6 +123,8 @@ export class Track {
                 } else {
                     car.setReverseMove(true);
                 }
+            } else {
+                car.setReverseMove(true);
             }
         } else {
             if (!this.isStartLineBetweenFrontAndRear(corners)) {
