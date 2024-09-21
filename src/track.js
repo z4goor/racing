@@ -4,7 +4,7 @@ export class Track {
         this.configUrl = configUrl;
         this.fastestLap = fastestLapTime;
         this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.context = this.canvas.getContext('2d');
         this.image = new Image();
         this.config = null;
         this.startLine = null;
@@ -16,14 +16,15 @@ export class Track {
     }
 
     async initialize() {
-        this.setupCanvas();
         await this.loadConfig();
         this.loadTrackImage();
     }
 
-    setupCanvas() {
-        this.canvas.width = this.trackElement.clientWidth;
-        this.canvas.height = this.trackElement.clientHeight;
+    setupCanvas(imageWidth, imageHeight) {
+        this.canvas.width = imageWidth;
+        this.canvas.height = imageHeight;
+        this.trackElement.style.width = `${imageWidth}px`;
+        this.trackElement.style.height = `${imageHeight}px`;
         this.trackElement.appendChild(this.canvas);
     }
 
@@ -72,11 +73,12 @@ export class Track {
         const dy = lineMidpoint.y - this.config.startPoint.y;
         const angle = Math.atan2(dy, dx);
         return ((angle + 2 * Math.PI) % (2 * Math.PI)) + Math.PI / 2;
-    }    
+    }
 
     loadTrackImage() {
         this.image.src = this.config.imageUrl;
         this.image.onload = () => {
+            this.setupCanvas(this.image.width, this.image.height);
             this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
             this.array = this.preprocessTrackData();
         };

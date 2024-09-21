@@ -7,7 +7,7 @@ body {
     color: #333;
     font-family: Arial, sans-serif;
     margin: 0;
-    padding-left: 320px;
+    padding-left: 10%;
     padding-right: 10%;        
 }
 
@@ -18,7 +18,7 @@ button {
 }
 
 #menu {
-    text-align: center; /* Center the content within the menu */
+    text-align: center;
     margin-bottom: 20px;
 }
 
@@ -27,9 +27,9 @@ button {
 }
 
 #timer {
-    width: 60%; /* Set the timer width to 60% of the screen */
-    margin: 0 auto; /* Center the timer */
-    overflow: hidden; /* Clear floats */
+    width: 60%;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
 .timer {
@@ -38,10 +38,10 @@ button {
 
 #current-lap,
 #fastest-lap {
-    display: inline-block; /* Make both elements inline-block */
-    vertical-align: middle; /* Align them vertically in the middle */
-    width: 150px; /* Set width to 150px */
-    text-align: center; /* Center text inside the divs */
+    display: inline-block;
+    vertical-align: middle;
+    width: 150px;
+    text-align: center;
 }
 
 #current-lap {
@@ -50,15 +50,13 @@ button {
 }
 
 #fastest-lap {
-    float: right; /* Float fastest lap to the right */
+    float: right;
 }
 
 #track {
     background-color: lightblue;
-    width: 700px;
-    height: 500px;
     position: relative;
-    margin: 0 auto; /* Center the track */
+    margin: 0 auto;
 }
 
 input {
@@ -86,7 +84,7 @@ select {
 }
 
 .input-group {
-    margin-bottom: 20px; /* Adds spacing between input groups */
+    margin-bottom: 20px;
 }
 
 #sidebar input {
