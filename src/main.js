@@ -226,23 +226,17 @@ function applyAIAction(actions) {
         if (!car) {
             continue
         }
-        switch (action[0]) {
-            case 'accelerate':
-                car.increaseSpeed(0.09);
-                break;
-            case 'brake':
-                car.decreaseSpeed(0.13);
-                break;
-        }
-        switch (action[1]) {
-            case 'left':
-                car.setRotationSpeed(-4.5);
-                break;
-            case 'right':
-                car.setRotationSpeed(4.5);
-                break;
-            default:
-                car.setRotationSpeed(0)
+
+        if (action[0]) {
+            if (action[0] > 0) {
+                car.increaseSpeed(0.09 * action[0]);
+            } else {
+                car.decreaseSpeed(0.13 * action[0]);
+            }
+        }        
+
+        if (action[1]) {
+            car.setRotationSpeed(4.5 * action[1]);
         }
     };
 }

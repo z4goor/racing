@@ -149,15 +149,11 @@ class NEATCarAI:
             except Exception:
                 return
         try:
-            actions = genome['network'].activate([sensor['distance'] for sensor in state['sensors']] + [state['speed']])
-
-            return [
-                'brake' if actions[0] < -0.6 else 'accelerate' if actions[0] > 0.6 else None,
-                'left' if actions[1] < -0.6 else 'right' if actions[1] > 0.6 else None,
-            ]
+            inputs = [sensor['distance'] for sensor in state['sensors']] + [state['speed']]
+            return genome['network'].activate(inputs)
         except Exception as e:
             print(f"Error while activating car {id_}: {e}")
-            return [None, None]
+            return [0, 0]
 
     def save_best_genome(self, file_name):
         filepath = os.path.join(os.path.dirname(__file__), 'genomes', file_name)
