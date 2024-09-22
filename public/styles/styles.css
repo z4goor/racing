@@ -7,64 +7,52 @@ body {
     color: #333;
     font-family: Arial, sans-serif;
     margin: 0;
-    padding-left: 10%;
-    padding-right: 10%;        
+    padding: 0;
+    display: -webkit-flex;
+    display: flex;
+    height: 100vh;
 }
 
 button {
-    background-color: gray;
-    border: 0;
-    border-radius: 5%;
+    background-color: black;
+}
+
+input {
+    background-color: #414050;
 }
 
 #menu {
-    text-align: center;
-    margin-bottom: 20px;
+    width: 200px;
+    background-color: #333;
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
 }
 
-#controls {
-    margin: 10px 0;
+#controls button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+#game-container {
+    width: 100%;
 }
 
 #timer {
-    width: 60%;
-    margin: 0 auto;
-    overflow: hidden;
-}
-
-.timer {
-    margin: 5px 0;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 #current-lap,
 #fastest-lap {
     display: inline-block;
-    vertical-align: middle;
     width: 150px;
     text-align: center;
 }
 
-#current-lap {
-    float: left;
-    margin: 5px 0;
-}
-
-#fastest-lap {
-    float: right;
-}
-
 #track {
     background-color: lightblue;
-    position: relative;
-    margin: 0 auto;
-}
-
-input {
-    background-color: #373570;
-}
-
-select {
-    background-color: #373570;
+    margin: auto;
 }
 
 #sidebar {
@@ -77,6 +65,7 @@ select {
     padding: 20px;
     box-shadow: 5px 0 20px rgba(0,0,0,0.5);
     transition: left 0.3s ease;
+    z-index: 1;
 }
 
 #sidebar.show {

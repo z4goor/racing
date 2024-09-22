@@ -75,8 +75,8 @@ class NEATCarAI:
         await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
     
     async def pause_action(self):
-        timeout = 3
-        interval = 0.017
+        timeout = 40
+        interval = 0.018
         time_threshold = 3
         total_time = 0
 

@@ -136,6 +136,8 @@ document.addEventListener('keydown', event => {
         case 'KeyB':
             sendGameStateToAI();
             break;
+        case 'Escape':
+            sidebar.classList.remove('show');            
     }
 
     if (!controlledCar) return;
