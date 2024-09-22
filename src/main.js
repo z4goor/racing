@@ -233,9 +233,9 @@ function applyAIAction(actions) {
             if (action[0] > 0) {
                 car.increaseSpeed(0.09 * action[0]);
             } else {
-                car.decreaseSpeed(0.13 * action[0]);
+                car.decreaseSpeed(-0.12 * action[0]);
             }
-        }        
+        }
 
         if (action[1]) {
             car.setRotationSpeed(4.5 * action[1]);
@@ -244,9 +244,10 @@ function applyAIAction(actions) {
 }
 
 function update() {
-    // console.time('track update');
     track.update();
-    // console.timeEnd('track update');
+    if (raceStarted) {
+        sendGameStateToAI();
+    }
 
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();
@@ -257,11 +258,4 @@ function update() {
     requestAnimationFrame(update);
 }
 
-setInterval(() => {
-    if (raceStarted) {
-        sendGameStateToAI();
-    }
-}, 18);
-
-// connectToServer();
 update();
