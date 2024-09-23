@@ -16,6 +16,7 @@ export class Track {
     }
 
     async initialize() {
+        this.trackElement.innerHTML = '';
         await this.loadConfig();
         this.loadTrackImage();
     }

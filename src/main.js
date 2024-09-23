@@ -60,17 +60,82 @@ const trackConfigUrl = '../config/config001.json';
 const trackElementId = 'track';
 
 const startRaceButton = document.getElementById('startRaceButton');
-const sidebar = document.getElementById('sidebar');
+const startRaceSidebar = document.getElementById('startRaceSidebar');
 const startRaceSubmitButton = document.getElementById('startRaceSubmitButton');
+
 const addHumanButton = document.getElementById('addHumanButton');
 const addAIButton = document.getElementById('addAIButton');
 const restartHumanButton = document.getElementById('restartHumanButton');
 const removeCarsButton = document.getElementById('removeCarsButton');
 const resetButton = document.getElementById('resetFastestLapButton');
+
+const changeTrackButton = document.getElementById('changeTrackButton');
+const trackSidebar = document.getElementById('trackSidebar');
+
 const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
 const showCornersCheckbox = document.getElementById('showCornersCheckbox');
 const lapTime = document.getElementById('current-time')
 const fastestLapTime = document.getElementById('fastest-time')
+
+const closeStartRaceButton = document.querySelector('#startRaceSidebar .close-btn');
+closeStartRaceButton.addEventListener('click', function() {
+    startRaceSidebar.classList.remove('show');
+});
+
+const closeTrackButton = document.querySelector('#trackSidebar .close-btn');
+closeTrackButton.addEventListener('click', function() {
+    trackSidebar.classList.remove('show');
+});
+
+const configsFolder = '../config';
+
+async function loadAllConfigs() {
+    try {
+        const response = await fetch(`${configsFolder}/config_list.json`);
+        const configFiles = await response.json();
+
+        const trackConfigs = await Promise.all(
+            configFiles.map(async (configFile) => {
+                const configResponse = await fetch(`${configsFolder}/${configFile}`);
+                const configData = await configResponse.json();
+                return {
+                    configUrl: `${configsFolder}/${configFile}`,
+                    imageUrl: configData.imageUrl
+                };
+            })
+        );
+
+        loadTrackImages(trackConfigs);
+    } catch (error) {
+        console.error("Error loading configs:", error);
+    }
+}
+
+function loadTrackImages(trackConfigs) {
+    const trackImagesContainer = document.getElementById('track-images');
+    trackImagesContainer.innerHTML = '';
+
+    trackConfigs.forEach(trackConfig => {
+        const imgElement = document.createElement('img');
+        imgElement.src = trackConfig.imageUrl;
+        imgElement.alt = trackConfig.name;
+        imgElement.addEventListener('click', () => {
+            loadNewTrack(trackConfig.configUrl);
+        });
+        trackImagesContainer.appendChild(imgElement);
+    });
+}
+
+function loadNewTrack(configUrl) {
+    track = new Track(trackElementId, configUrl, fastestLap);
+}
+
+loadAllConfigs();
+
+closeTrackButton.addEventListener('click', function() {
+    trackSidebar.classList.remove('show');
+});
+
 
 track = new Track(trackElementId, trackConfigUrl, fastestLap);
 
@@ -106,7 +171,7 @@ resetButton.addEventListener('click', function() {
 });
 
 startRaceButton.addEventListener('click', function() {
-    sidebar.classList.toggle('show');
+    startRaceSidebar.classList.toggle('show');
 });
 
 startRaceSubmitButton.addEventListener('click', async function() {
@@ -123,6 +188,10 @@ startRaceSubmitButton.addEventListener('click', async function() {
     sidebar.classList.remove('show');
 });
 
+changeTrackButton.addEventListener('click', function() {
+    trackSidebar.classList.toggle('show');
+});
+
 document.addEventListener('keydown', event => {
     keysPressed[event.code] = true;
 
@@ -136,8 +205,6 @@ document.addEventListener('keydown', event => {
         case 'KeyB':
             sendGameStateToAI();
             break;
-        case 'Escape':
-            sidebar.classList.remove('show');            
     }
 
     if (!controlledCar) return;

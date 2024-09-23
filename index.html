@@ -16,6 +16,7 @@
             <button id="restartHumanButton">Restart Human</button>
             <button id="removeCarsButton">Remove Cars</button>
             <button id="resetFastestLapButton">Reset Best</button>
+            <button id="changeTrackButton">Change Track</button>
             <input type="checkbox" id="showSensorsCheckbox"/>
             <label for="showSensorsCheckbox">Sensors</label>
             <input type="checkbox" id="showCornersCheckbox"/>
@@ -35,7 +36,8 @@
         </div>
         <div id="track"></div>
     </div>
-    <div id="sidebar">
+    <div id="startRaceSidebar" class="sidebar">
+        <button class="close-btn">&times;</button>
         <h2>Start AI training</h2>
         <div class="input-group">
             <label for="generationSize">Generation Size</label>
@@ -46,6 +48,12 @@
             <input type="number" id="numGenerations" value="100">
         </div>
         <button id="startRaceSubmitButton">Submit</button>
+    </div>
+    <div id="trackSidebar" class="sidebar">
+        <button class="close-btn">&times;</button>
+        <h2>Select Track</h2>
+        <div id="track-images" class="track-images">
+        </div>
     </div>
     <script src="src/main.js" type="module"></script>
 </body>
