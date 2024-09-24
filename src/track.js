@@ -12,7 +12,7 @@ export class Track {
         this.cars = [];
     }
 
-    async setupTrack(configUrl) {
+    async setup(configUrl) {
         this.config = await this.loadConfig(configUrl);
         this.trackElement.innerHTML = '';
         this.startLine = this.config.startLine;

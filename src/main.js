@@ -54,12 +54,17 @@ let controlledCar = null;
 let keysPressed = {};
 let fastestLap = getFastestLap();
 let raceStarted = false;
+const trackConfig = localStorage.getItem('trackConfig');
 const trackElement = document.getElementById('track');
 const configsFolder = '../config';
 const track = new Track(trackElement, fastestLap);
 
 const trackConfigUrl = await loadAllConfigs();
-track.setupTrack(trackConfigUrl);
+if (trackConfig) {
+    track.setup(trackConfig);
+} else {
+    track.setup(trackConfigUrl);
+}
 
 const startRaceButton = document.getElementById('startRaceButton');
 const startRaceSidebar = document.getElementById('startRaceSidebar');
@@ -129,7 +134,9 @@ function loadTrackImages(trackConfigs) {
 }
 
 function loadNewTrack(configUrl) {
-    track.setupTrack(configUrl);
+    localStorage.setItem('trackConfig', configUrl);
+    resetCars();
+    track.setup(configUrl);
 }
 
 addHumanButton.addEventListener('click', function() {
@@ -152,9 +159,7 @@ restartHumanButton.addEventListener('click', function() {
 });
 
 removeCarsButton.addEventListener('click', function() {
-    track.clearTrack();
-    controlledCar = null;
-    raceStarted = false;
+    resetCars();
 });
 
 resetButton.addEventListener('click', function() {
@@ -274,6 +279,12 @@ function updateLapTime(lapTimeStart) {
 
 function setCurrentTime(min, sec, ms) {
     document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+}
+
+function resetCars() {
+    track.clearTrack();
+    controlledCar = null;
+    raceStarted = false;
 }
 
 function sendGameStateToAI() {
