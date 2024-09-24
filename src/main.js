@@ -52,12 +52,14 @@ function startGeneration(n) {
 
 let controlledCar = null;
 let keysPressed = {};
-let track = null;
 let fastestLap = getFastestLap();
 let raceStarted = false;
+const trackElement = document.getElementById('track');
+const configsFolder = '../config';
+const track = new Track(trackElement, fastestLap);
 
-const trackConfigUrl = '../config/config001.json';
-const trackElementId = 'track';
+const trackConfigUrl = await loadAllConfigs();
+track.setupTrack(trackConfigUrl);
 
 const startRaceButton = document.getElementById('startRaceButton');
 const startRaceSidebar = document.getElementById('startRaceSidebar');
@@ -87,8 +89,6 @@ closeTrackButton.addEventListener('click', function() {
     trackSidebar.classList.remove('show');
 });
 
-const configsFolder = '../config';
-
 async function loadAllConfigs() {
     try {
         const response = await fetch(`${configsFolder}/config_list.json`);
@@ -106,8 +106,10 @@ async function loadAllConfigs() {
         );
 
         loadTrackImages(trackConfigs);
+        return trackConfigs[0].configUrl;
     } catch (error) {
         console.error("Error loading configs:", error);
+        return null;
     }
 }
 
@@ -127,17 +129,8 @@ function loadTrackImages(trackConfigs) {
 }
 
 function loadNewTrack(configUrl) {
-    track = new Track(trackElementId, configUrl, fastestLap);
+    track.setupTrack(configUrl);
 }
-
-loadAllConfigs();
-
-closeTrackButton.addEventListener('click', function() {
-    trackSidebar.classList.remove('show');
-});
-
-
-track = new Track(trackElementId, trackConfigUrl, fastestLap);
 
 addHumanButton.addEventListener('click', function() {
     if (controlledCar) return;

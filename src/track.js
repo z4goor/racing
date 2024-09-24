@@ -1,24 +1,43 @@
 export class Track {
-    constructor(trackElementId, configUrl, fastestLapTime) {
-        this.trackElement = document.getElementById(trackElementId);
-        this.configUrl = configUrl;
+    constructor(trackElement, fastestLapTime) {
+        this.trackElement = trackElement;
         this.fastestLap = fastestLapTime;
         this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext('2d');
+        this.context = this.canvas.getContext('2d', { willReadFrequently: true });
         this.image = new Image();
         this.config = null;
         this.startLine = null;
         this.initialRotation = null;
         this.array = null;
         this.cars = [];
-
-        this.initialize();
     }
 
-    async initialize() {
+    async setupTrack(configUrl) {
+        this.config = await this.loadConfig(configUrl);
         this.trackElement.innerHTML = '';
-        await this.loadConfig();
+        this.startLine = this.config.startLine;
+        this.initialRotation = this.calculateInitialRotation(this.startLine);
         this.loadTrackImage();
+    }
+
+    calculateInitialRotation(startLine) {
+        const lineMidpoint = {
+            x: (startLine.p1.x + startLine.p2.x) / 2,
+            y: (startLine.p1.y + startLine.p2.y) / 2
+        };
+        const dx = lineMidpoint.x - this.config.startPoint.x;
+        const dy = lineMidpoint.y - this.config.startPoint.y;
+        const angle = Math.atan2(dy, dx);
+        return ((angle + 2 * Math.PI) % (2 * Math.PI)) + Math.PI / 2;
+    }
+
+    loadTrackImage() {
+        this.image.src = this.config.imageUrl;
+        this.image.onload = () => {
+            const canvas = this.setupCanvas(this.image.width, this.image.height);
+            this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
+            this.array = this.preprocessTrackData();
+        };
     }
 
     setupCanvas(imageWidth, imageHeight) {
@@ -54,35 +73,13 @@ export class Track {
         return trackArray;
     }
 
-    async loadConfig() {
+    async loadConfig(configUrl) {
         try {
-            const response = await fetch(this.configUrl);
-            this.config = await response.json();
-            this.startLine = this.config.startLine;
-            this.initialRotation = this.calculateInitialRotation(this.startLine);
+            const response = await fetch(configUrl);
+            return await response.json();
         } catch (error) {
             console.error('Error loading track configuration:', error);
         }
-    }
-
-    calculateInitialRotation(startLine) {
-        const lineMidpoint = {
-            x: (startLine.p1.x + startLine.p2.x) / 2,
-            y: (startLine.p1.y + startLine.p2.y) / 2
-        };
-        const dx = lineMidpoint.x - this.config.startPoint.x;
-        const dy = lineMidpoint.y - this.config.startPoint.y;
-        const angle = Math.atan2(dy, dx);
-        return ((angle + 2 * Math.PI) % (2 * Math.PI)) + Math.PI / 2;
-    }
-
-    loadTrackImage() {
-        this.image.src = this.config.imageUrl;
-        this.image.onload = () => {
-            this.setupCanvas(this.image.width, this.image.height);
-            this.context.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
-            this.array = this.preprocessTrackData();
-        };
     }
 
     update() {
