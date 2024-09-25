@@ -1,70 +1,18 @@
 import { Car } from "./car.js";
 import { Track } from "./track.js";
+import { Timer } from './timer.js';
 
-let socket;
-
-function connectToServer() {
-    return new Promise((resolve, reject) => {
-        socket = new WebSocket('ws://localhost:8000/ws');
-
-        socket.onopen = function() {
-            console.log('Connected to WebSocket server');
-            resolve();
-        };
-
-        socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            reject(error);
-        };
-
-        socket.onclose = function() {
-            console.log('Disconnected from WebSocket server');
-        };
-
-        socket.onmessage = function(message) {
-            const parsedMessage = JSON.parse(message.data);
-            const event = parsedMessage.event;
-            const data = parsedMessage.data;
-
-            if (event === 'new_generation') {
-                startGeneration(data);
-            } else if (event === 'car_action') {
-                applyAIAction(data);
-            } else if (event === 'game_state') {
-                sendGameStateToAI();
-            } else if (event === 'start') {
-                raceStarted = true;
-            } else if (event === 'stop') {
-                track.clearTrack();
-                raceStarted = false;
-            }
-        };
-    });
-}
-
-function send(event, data) {
-    socket.send(JSON.stringify({'event': event, 'data': data}));
-}
-
-function startGeneration(n) {
-    startRace(n);
-}
-
+let socket = null;
 let controlledCar = null;
 let keysPressed = {};
-let fastestLap = getFastestLap();
 let raceStarted = false;
 const trackConfig = localStorage.getItem('trackConfig');
 const trackElement = document.getElementById('track');
 const configsFolder = '../config';
-const track = new Track(trackElement, fastestLap);
-
-const trackConfigUrl = await loadAllConfigs();
-if (trackConfig) {
-    track.setup(trackConfig);
-} else {
-    track.setup(trackConfigUrl);
-}
+const currentTimeElement = document.getElementById('current-time')
+const fastestTimeElement = document.getElementById('fastest-time')
+const timer = new Timer(currentTimeElement, fastestTimeElement);
+const track = new Track(trackElement, timer.fastestLap);
 
 const startRaceButton = document.getElementById('startRaceButton');
 const startRaceSidebar = document.getElementById('startRaceSidebar');
@@ -81,8 +29,6 @@ const trackSidebar = document.getElementById('trackSidebar');
 
 const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
 const showCornersCheckbox = document.getElementById('showCornersCheckbox');
-const lapTime = document.getElementById('current-time')
-const fastestLapTime = document.getElementById('fastest-time')
 
 const closeStartRaceButton = document.querySelector('#startRaceSidebar .close-btn');
 closeStartRaceButton.addEventListener('click', function() {
@@ -93,6 +39,13 @@ const closeTrackButton = document.querySelector('#trackSidebar .close-btn');
 closeTrackButton.addEventListener('click', function() {
     trackSidebar.classList.remove('show');
 });
+
+const trackConfigUrl = await loadAllConfigs();
+if (trackConfig) {
+    track.setup(trackConfig);
+} else {
+    track.setup(trackConfigUrl);
+}
 
 async function loadAllConfigs() {
     try {
@@ -141,7 +94,6 @@ function loadNewTrack(configUrl) {
 
 addHumanButton.addEventListener('click', function() {
     if (controlledCar) return;
-    setCurrentTime(0, 0, 0);
     const car = new Car(15, 25, '#ffa12d', true);
     track.addCarToTrack(car);
     controlledCar = car;
@@ -155,7 +107,6 @@ addAIButton.addEventListener('click', function() {
 restartHumanButton.addEventListener('click', function() {
     if (!controlledCar) return;
     track.restartCar(controlledCar);
-    setCurrentTime(0, 0, 0);
 });
 
 removeCarsButton.addEventListener('click', function() {
@@ -238,6 +189,53 @@ document.addEventListener('keyup', event => {
     }
 });
 
+function connectToServer() {
+    return new Promise((resolve, reject) => {
+        socket = new WebSocket('ws://localhost:8000/ws');
+
+        socket.onopen = function() {
+            console.log('Connected to WebSocket server');
+            resolve();
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            reject(error);
+        };
+
+        socket.onclose = function() {
+            console.log('Disconnected from WebSocket server');
+        };
+
+        socket.onmessage = function(message) {
+            const parsedMessage = JSON.parse(message.data);
+            const event = parsedMessage.event;
+            const data = parsedMessage.data;
+
+            if (event === 'new_generation') {
+                startGeneration(data);
+            } else if (event === 'car_action') {
+                applyAIAction(data);
+            } else if (event === 'game_state') {
+                sendGameStateToAI();
+            } else if (event === 'start') {
+                raceStarted = true;
+            } else if (event === 'stop') {
+                track.clearTrack();
+                raceStarted = false;
+            }
+        };
+    });
+}
+
+function send(event, data) {
+    socket.send(JSON.stringify({'event': event, 'data': data}));
+}
+
+function startGeneration(n) {
+    startRace(n);
+}
+
 function startRace(n) {
     track.clearTrack()
     for (let i = 0; i < n; i++) {
@@ -249,36 +247,6 @@ function startRace(n) {
 function addNewAICar() {
     const car = new Car(15, 25, '#fcff2d');
     track.addCarToTrack(car);
-}
-
-function getFastestLap() {
-    const value = localStorage.getItem('fastestLap');
-    return value ? parseInt(value, 10) : null;
-}
-
-function updateFastestLapTime(time) {
-    if (!fastestLap || time < fastestLap) {
-        saveFastestLap(time);
-    }
-    const displayTime = time ? `${Math.floor(time / 60000)}:${(Math.floor((time % 60000) / 1000)).toString().padStart(2, '0')}.${(time % 1000).toString().padStart(3, '0')}` : '0:00.000';
-    fastestLapTime.textContent = displayTime;
-}
-
-function saveFastestLap(time) {
-    localStorage.setItem('fastestLap', time);
-    fastestLap = time;
-}
-
-function updateLapTime(lapTimeStart) {
-    if (!lapTimeStart) {
-        return;
-    }
-    const elapsedTime = Date.now() - lapTimeStart;
-    lapTime.textContent = `${Math.floor(elapsedTime / 60000)}:${(Math.floor((elapsedTime % 60000) / 1000)).toString().padStart(2, '0')}.${(elapsedTime % 1000).toString().padStart(3, '0')}`;
-}
-
-function setCurrentTime(min, sec, ms) {
-    document.getElementById('current-time').textContent = `${min}:${sec.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
 function resetCars() {
@@ -323,8 +291,7 @@ function update() {
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();
 
-    updateFastestLapTime(track.fastestLap);
-    if (controlledCar) updateLapTime(controlledCar.lapStartTime);
+    timer.update(controlledCar, track);
 
     requestAnimationFrame(update);
 }
