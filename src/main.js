@@ -1,8 +1,8 @@
 import { Car } from "./car.js";
 import { Track } from "./track.js";
 import { Timer } from './timer.js';
+import { Socket } from "./socket.js";
 
-let socket = null;
 let controlledCar = null;
 let keysPressed = {};
 let raceStarted = false;
@@ -30,6 +30,11 @@ if (trackConfig) {
 } else {
     track.setup(trackConfigUrl);
 }
+
+let socket = new Socket(
+    'ws://localhost:8000/ws',
+    onSocketMessage
+);
 
 document.querySelector('#startRaceSidebar .close-btn').addEventListener('click', function() {
     startRaceSidebar.classList.remove('show');
@@ -74,14 +79,13 @@ document.getElementById('startRaceSubmitButton').addEventListener('click', async
     const generationSize = document.getElementById('generationSize').value;
     const numGenerations = document.getElementById('numGenerations').value;
 
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-        console.log('Connecting to server...');
-        await connectToServer();
+    if (!socket.isConnected()) {
+        await socket.connect();
     }
 
-    send('model_init', { generationSize: parseInt(generationSize), numGenerations: parseInt(numGenerations) });
+    socket.send('model_init', { generationSize: parseInt(generationSize), numGenerations: parseInt(numGenerations) });
 
-    sidebar.classList.remove('show');
+    startRaceSidebar.classList.remove('show');
 });
 
 document.getElementById('changeTrackButton').addEventListener('click', function() {
@@ -93,7 +97,7 @@ document.addEventListener('keydown', event => {
 
     switch (event.code) {
         case 'KeyM':
-            connectToServer();
+            socket.connect();
             break;
         case 'KeyK':
             socket.disconnect();
@@ -135,6 +139,23 @@ document.addEventListener('keyup', event => {
         controlledCar.setRotationSpeed(0);
     }
 });
+
+function onSocketMessage(parsedMessage) {
+    const { event, data } = parsedMessage;
+
+    if (event === 'new_generation') {
+        startGeneration(data);
+    } else if (event === 'car_action') {
+        applyAIAction(data);
+    } else if (event === 'game_state') {
+        sendGameStateToAI();
+    } else if (event === 'start') {
+        raceStarted = true;
+    } else if (event === 'stop') {
+        track.clearTrack();
+        raceStarted = false;
+    }
+}
 
 async function loadAllConfigs() {
     try {
@@ -181,49 +202,6 @@ function loadNewTrack(configUrl) {
     track.setup(configUrl);
 }
 
-function connectToServer() {
-    return new Promise((resolve, reject) => {
-        socket = new WebSocket('ws://localhost:8000/ws');
-
-        socket.onopen = function() {
-            console.log('Connected to WebSocket server');
-            resolve();
-        };
-
-        socket.onerror = function(error) {
-            console.error('WebSocket error:', error);
-            reject(error);
-        };
-
-        socket.onclose = function() {
-            console.log('Disconnected from WebSocket server');
-        };
-
-        socket.onmessage = function(message) {
-            const parsedMessage = JSON.parse(message.data);
-            const event = parsedMessage.event;
-            const data = parsedMessage.data;
-
-            if (event === 'new_generation') {
-                startGeneration(data);
-            } else if (event === 'car_action') {
-                applyAIAction(data);
-            } else if (event === 'game_state') {
-                sendGameStateToAI();
-            } else if (event === 'start') {
-                raceStarted = true;
-            } else if (event === 'stop') {
-                track.clearTrack();
-                raceStarted = false;
-            }
-        };
-    });
-}
-
-function send(event, data) {
-    socket.send(JSON.stringify({'event': event, 'data': data}));
-}
-
 function startGeneration(n) {
     startRace(n);
 }
@@ -249,7 +227,7 @@ function resetCars() {
 
 function sendGameStateToAI() {
     // console.time('sending');
-    send('game_state', track.getCarData(true));
+    socket.send('game_state', track.getCarData(true));
     // console.timeEnd('sending');
 }
 
