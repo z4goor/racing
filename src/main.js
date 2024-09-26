@@ -68,7 +68,6 @@ document.getElementById('removeCarsButton').addEventListener('click', function()
 document.getElementById('resetFastestLapButton').addEventListener('click', function() {
     localStorage.setItem('fastestLap', null);
     track.fastestLap = null;
-    updateFastestLapTime(null);
 });
 
 document.getElementById('startRaceButton').addEventListener('click', function() {
