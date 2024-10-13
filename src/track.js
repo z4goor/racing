@@ -97,7 +97,7 @@ export class Track {
         const corners = car.corners;
         const vector = car.movementVector;
         
-        if (this.checkCollision(car.corners, vector)) return car.collide();
+        if (this.checkCollision(corners, vector)) return car.collide();
         
         car.move(vector);
         
@@ -142,6 +142,30 @@ export class Track {
         }
     }
 
+    clearTrack() {
+        this.cars = [];
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        console.log('Track has been cleared.');
+    }
+
+    addCarToTrack(car) {
+        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
+        car.setRotation(this.initialRotation);
+        car.sensors = this.getSensorData(car);
+        this.cars.push(car);
+    }
+
+    removeCar(car) {
+        this.cars = this.cars.filter(c => c.id !== car.id);
+    }
+
+    restartCar(car) {
+        car.stop();
+        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
+        car.setRotation(this.initialRotation);
+        car.lapStartTime = null;
+    }
+
     isAnyCornerCrossingLine(corners, vector) {
         const { p1, p2 } = this.startLine;
     
@@ -178,35 +202,13 @@ export class Track {
         return this.isLineIntersect(frontLeft, rearRight, lineStart, lineEnd) ||
                this.isLineIntersect(rearLeft, frontRight, lineStart, lineEnd);
     }
-    
-    addCarToTrack(car) {
-        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
-        car.setRotation(this.initialRotation);
-        car.sensors = this.getSensorData(car);
-        this.cars.push(car);
-    }
-
-    removeCar(car) {
-        this.cars.pop(car);
-    }
-
-    clearTrack() {
-        this.cars = [];
-    }
-
-    restartCar(car) {
-        car.stop();
-        car.setPosition(this.config.startPoint.x, this.config.startPoint.y);
-        car.setRotation(this.initialRotation);
-        car.lapStartTime = null;
-    }
 
     checkCollision(corners, vector) {
         return corners.some(corner => this.isCollision(corner, vector));
     }
 
     isCollision(point, vector = { x: 0, y: 0}) {
-        return this.array[Math.floor(point.y + vector.y)][Math.floor(point.x + vector.x)] == 1
+        return this.array[Math.floor(point.y + vector.y)][Math.floor(point.x + vector.x)] == 1;
     }
 
     isLineIntersect(p1, p2, q1, q2) {
