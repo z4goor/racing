@@ -88,16 +88,42 @@ input {
     width: 100%;
 }
 
+/* Timer container */
 #timer {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 50px; /* Space between the current lap and fastest lap */
     margin-bottom: 20px;
+    background-color: #2C2F33;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* Individual timer section */
 #current-lap, #fastest-lap {
-    display: inline-block;
-    width: 150px;
     text-align: center;
+    flex: 1;
 }
+
+/* Timer labels */
+.timer-label {
+    font-size: 18px;
+    color: #F9FAFB;
+    margin: 0 0 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Timer values */
+.timer-value {
+    font-size: 28px; /* Larger font size for readability */
+    font-weight: bold;
+    color: #FFD700; /* Gold color for distinction */
+    margin: 0;
+}
+
 
 /* Track styling */
 #track {
@@ -107,32 +133,63 @@ input {
 
 .sidebar {
     position: fixed;
-    left: -600px;
+    left: -300px;
     top: 0;
     width: 300px;
     height: 100%;
-    background-color: #38375c;
-    padding: 20px;
+    background-color: #2D3142;
+    padding: 20px; /* Keep padding for the rest of the content */
+    padding-top: 50px; /* Add space for the close button */
     box-shadow: 5px 0 20px rgba(0, 0, 0, 0.5);
     transition: left 0.3s ease;
     z-index: 1;
+    color: #F9FAFB;
 }
 
 .sidebar.show {
-    left: 0;
+    left: 0px; /* Bring the sidebar into view when this class is applied */
 }
 
-/* Sidebar buttons for Start Race and other actions */
+
+.sidebar h2 {
+    font-size: 24px; /* Larger font for heading */
+    font-weight: 700; /* Bold heading */
+    text-align: center;
+    margin-bottom: 30px; /* More space below the title */
+}
+
+.sidebar .input-group {
+    margin-bottom: 20px;
+}
+
+.sidebar input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 6px; /* Rounded corners */
+    border: 1px solid #444B52;
+    background-color: #3E4C59; /* Dark input background */
+    color: #F9FAFB; /* Lighter text color */
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: border 0.3s ease;
+}
+
+.sidebar input:focus {
+    border-color: #6366F1; /* Focus state with lighter border */
+    outline: none;
+}
+
 .sidebar button {
     background-color: #4CAF50;
     color: #fff;
     border-radius: 6px;
     border: none;
-    padding: 12px;
-    font-size: 14px;
+    padding: 15px; /* Increased padding */
+    font-size: 16px; /* Larger button font */
     cursor: pointer;
     width: 100%;
-    margin-bottom: 15px;
+    margin-top: 20px; /* Space above the button */
     transition: background-color 0.3s ease;
 }
 
@@ -140,20 +197,20 @@ input {
     background-color: #45a049;
 }
 
-/* Sidebar close button */
 .sidebar .close-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 10px; /* Align at the top */
+    right: 10px; /* Align at the right */
     background-color: transparent;
-    color: #fff;
-    font-size: 24px;
+    color: #ff0000;
+    font-size: 24px; /* Font size */
     border: none;
     cursor: pointer;
+    z-index: 10; /* Ensure it's above all elements */
 }
 
 .sidebar .close-btn:hover {
-    color: #ff0000;
+    color: #ff4500; /* Lighter red on hover */
 }
 
 /* Track images styling */
