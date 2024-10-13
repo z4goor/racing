@@ -10,6 +10,7 @@ export class Car {
         this.speed = 0;
         this.rotation = 0;
         this.rotationSpeed = 0;
+        this.isCrossingStartLine = false;
         this.reverseMove = false;
         this.lapStartTime = null;
         this.collision = false;

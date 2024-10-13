@@ -114,7 +114,7 @@ export class Track {
                 if (this.checkAppropriateDirection(car)) {
                     if (!car.reverseMove) {
                         const previousLapTime = car.startLap();
-                        if (previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
+                        if (!car.isCrossingStartLine && previousLapTime && (!this.fastestLap || previousLapTime < this.fastestLap)) {
                             this.fastestLap = previousLapTime;
                         }
                     } else {
@@ -123,16 +123,21 @@ export class Track {
                 } else {
                     car.setReverseMove(true);
                 }
+                car.isCrossingStartLine = true;
             } else {
                 car.setReverseMove(true);
+                car.isCrossingStartLine = false;
             }
         } else {
             if (!this.isStartLineBetweenFrontAndRear(corners)) {
+                car.isCrossingStartLine = true;
                 if (!this.checkAppropriateDirection(car)) {
                     if (!car.reverseMove) {
                         car.setReverseMove(true);
                     }
                 }
+            } else {
+                car.isCrossingStartLine = false;
             }
         }
     }
