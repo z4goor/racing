@@ -38,10 +38,12 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
+            print(f"Starting NEAT run with {self.config.pop_size} population size for {data['numGenerations']} generations")
             self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, data['numGenerations'])
             self.save_best_genome('genome')
+            print("NEAT run complete.")
         except Exception as e:
-            print(f"Error during population run: {e}")
+            print(f"Error during NEAT run: {e}")
 
     async def update_car_data(self, car_data, client_id):
         async with self.lock:
@@ -49,11 +51,15 @@ class NEATCarAI:
 
     def run_generation(self, genomes, config):
         try:
-            asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop).result()
-            asyncio.run_coroutine_threadsafe(self.pause_action(), self.loop).result()
-            asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop).result()
+            setup_future = asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop)
+            setup_future.result()
+            action_future = asyncio.run_coroutine_threadsafe(self.pause_action(), self.loop)
+            action_future.result()
+            clear_future = asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop)
+            clear_future.result()
         except Exception as e:
             print(f"Error in run_generation: {e}")
+
     
     async def setup_data(self, genomes, config):
         for _, genome in genomes:
@@ -61,9 +67,14 @@ class NEATCarAI:
         
         await self.sio.send_json({'event': 'new_generation', 'data': len(genomes)})
         
+        timeout = 5  # Timeout in seconds
+        start_time = time.time()
+
         while not self.car_states:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Car states not received within the timeout period.")
             await asyncio.sleep(0.05)
-        
+
         async with self.lock:
             self.genomes = {
                 id_: {
@@ -73,6 +84,7 @@ class NEATCarAI:
                 for genome_id, id_ in enumerate(self.car_states.keys())
             }
         await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
+        print("Generation setup complete.")
     
     async def pause_action(self):
         timeout = 40
@@ -82,48 +94,53 @@ class NEATCarAI:
 
         while total_time < timeout:
             start_time = time.time()
+
             async with self.lock:
                 car_data = list(self.car_states.values())
-            
+
             if not car_data:
-                return
-            
+                return  # Stop if no car data exists
+
             actions = {}
             staying = 0
             for car_id, state in self.car_states.items():
-                collision = await self.evaluate_genome(car_id, state)
-                if collision:
+                if await self.evaluate_genome(car_id, state):
                     actions[car_id] = await self.activate_car(car_id, state)
-                    if state['speed'] == 0:
+                    if state['speed'] <= 0:
                         staying += 1
+
             if total_time > time_threshold and len(actions) == staying:
-                print('Stop on stop')
+                print('Stopping because all cars are stationary.')
                 return
+
             if actions:
                 await self.send_car_action(actions)
-            
-            await asyncio.sleep(interval - (time.time() - start_time))
+
+            elapsed_time = time.time() - start_time
+            await asyncio.sleep(max(0, interval - elapsed_time))
             total_time += interval
 
     async def evaluate_genome(self, car_id, state):
         async with self.lock:
             car = self.genomes.get(car_id)
-            if not car:
-                return False
-            car = car.copy()
-        
+
+        if not car:
+            return False
+
         if state['collision']:
-            car['genome'].fitness -= 50
             async with self.lock:
+                car['genome'].fitness -= 50
                 del self.genomes[car_id]
-                return False
+            return False
         elif state['speed'] < 0:
             car['genome'].fitness -= 200
         elif state['speed'] < 0.2:
             car['genome'].fitness -= 1
         else:
             car['genome'].fitness += state['speed']
+        
         return True
+
 
     async def send_car_action(self, actions):
         try:
@@ -144,10 +161,11 @@ class NEATCarAI:
     
     async def activate_car(self, id_, state):
         async with self.lock:
-            try:
-                genome = self.genomes[id_]
-            except Exception:
-                return
+            genome = self.genomes.get(id_)
+
+        if not genome:
+            return [0, 0]
+
         try:
             inputs = [sensor['distance'] for sensor in state['sensors']] + [state['speed']]
             return genome['network'].activate(inputs)
