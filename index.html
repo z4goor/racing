@@ -10,19 +10,25 @@
 <body>
     <div id="menu">
         <div id="controls">
-            <button id="startRaceButton">Start Race</button>
-            <button id="addHumanButton">Add Human</button>
-            <button id="addAIButton">Add AI</button>
-            <button id="restartHumanButton">Restart Human</button>
-            <button id="removeCarsButton">Remove Cars</button>
-            <button id="resetFastestLapButton">Reset Best</button>
-            <button id="changeTrackButton">Change Track</button>
-            <input type="checkbox" id="showSensorsCheckbox"/>
-            <label for="showSensorsCheckbox">Sensors</label>
-            <input type="checkbox" id="showCornersCheckbox"/>
-            <label for="showCornersCheckbox">Corners</label>
+            <h2>Controls</h2>
+            <a href="#" id="startRaceButton">Start Race</a>
+            <a href="#" id="addHumanButton">Add Human</a>
+            <a href="#" id="addAIButton">Add AI</a>
+            <a href="#" id="restartHumanButton">Restart Human</a>
+            <a href="#" id="removeCarsButton">Remove Cars</a>
+            <a href="#" id="resetFastestLapButton">Reset Best</a>
+            <a href="#" id="changeTrackButton">Change Track</a>
+            <label for="showSensorsCheckbox">
+                <input type="checkbox" id="showSensorsCheckbox"/>
+                Sensors
+            </label>
+            <label for="showCornersCheckbox">
+                <input type="checkbox" id="showCornersCheckbox"/>
+                Corners
+            </label>
         </div>
     </div>
+
     <div id="game-container">
         <div id="timer">
             <div id="current-lap">
@@ -36,6 +42,7 @@
         </div>
         <div id="track"></div>
     </div>
+
     <div id="startRaceSidebar" class="sidebar">
         <button class="close-btn">&times;</button>
         <h2>Start AI training</h2>
@@ -49,12 +56,13 @@
         </div>
         <button id="startRaceSubmitButton">Submit</button>
     </div>
+
     <div id="trackSidebar" class="sidebar">
         <button class="close-btn">&times;</button>
         <h2>Select Track</h2>
-        <div id="track-images" class="track-images">
-        </div>
+        <div id="track-images" class="track-images"></div>
     </div>
+
     <script src="src/main.js" type="module"></script>
 </body>
 </html>

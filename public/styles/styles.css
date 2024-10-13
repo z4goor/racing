@@ -1,39 +1,86 @@
 * {
     color: bisque;
+    box-sizing: border-box;
 }
 
 body {
     background-color: #21272A;
-    color: #333;
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    display: -webkit-flex;
     display: flex;
     height: 100vh;
 }
 
-button {
-    background-color: black;
+a {
+    text-decoration: none;
+    color: white;
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    text-align: left;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0;
+}
+
+a:hover {
+    background-color: #6366F1;
+    color: #FFFFFF;
 }
 
 input {
     background-color: #414050;
+    color: bisque;
 }
 
+/* Sidebar (menu) styling */
 #menu {
-    width: 200px;
-    background-color: #333;
-    padding: 20px;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+    width: 220px;
+    background-color: #2C2F33;
+    padding: 0; /* Removed padding to make anchors take the full width */
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.7);
+    border-right: 1px solid #202225;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 }
 
-#controls button {
-    display: block;
+#controls {
     width: 100%;
-    margin-bottom: 10px;
 }
 
+#controls input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+#controls label {
+    font-size: 14px;
+    padding: 12px;
+    width: 100%;
+    color: white;
+    display: block;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#controls label:hover {
+    background-color: #6366F1;
+    color: white;
+}
+
+#menu h2 {
+    font-size: 18px;
+    margin: 0;
+    color: #F9FAFB;
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+}
+
+/* Timer styling */
 #game-container {
     width: 100%;
 }
@@ -43,13 +90,13 @@ input {
     margin-bottom: 20px;
 }
 
-#current-lap,
-#fastest-lap {
+#current-lap, #fastest-lap {
     display: inline-block;
     width: 150px;
     text-align: center;
 }
 
+/* Track styling */
 #track {
     background-color: lightblue;
     margin: auto;
@@ -72,32 +119,25 @@ input {
     left: 0;
 }
 
-.sidebar .input-group {
-    margin-bottom: 20px;
-}
-
-.sidebar input {
-    width: 100%;
-    padding: 7px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-}
-
+/* Sidebar buttons for Start Race and other actions */
 .sidebar button {
-    width: 100%;
-    padding: 10px;
     background-color: #4CAF50;
-    color: white;
+    color: #fff;
+    border-radius: 6px;
     border: none;
-    border-radius: 5px;
+    padding: 12px;
+    font-size: 14px;
     cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    transition: background-color 0.3s ease;
 }
 
 .sidebar button:hover {
     background-color: #45a049;
 }
 
+/* Sidebar close button */
 .sidebar .close-btn {
     position: absolute;
     top: 10px;
@@ -113,6 +153,7 @@ input {
     color: #ff0000;
 }
 
+/* Track images styling */
 .track-images {
     display: grid;
     grid-template-columns: 1fr 1fr;
