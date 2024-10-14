@@ -123,24 +123,29 @@ class NEATCarAI:
     async def evaluate_genome(self, car_id, state):
         async with self.lock:
             car = self.genomes.get(car_id)
-
+        
         if not car:
             return False
-
+        
+        fitness = car['genome'].fitness
+        
         if state['collision']:
             async with self.lock:
-                car['genome'].fitness -= 50
+                car['genome'].fitness = fitness - 50
                 del self.genomes[car_id]
             return False
-        elif state['speed'] < 0:
-            car['genome'].fitness -= 200
+
+        if state['speed'] < 0:
+            fitness -= 200
         elif state['speed'] < 0.2:
-            car['genome'].fitness -= 1
+            fitness -= 1
         else:
-            car['genome'].fitness += state['speed']
+            fitness += state['speed']
+        
+        async with self.lock:
+            car['genome'].fitness = fitness
         
         return True
-
 
     async def send_car_action(self, actions):
         try:
