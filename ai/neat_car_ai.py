@@ -9,11 +9,9 @@ class NEATCarAI:
         self.id = id_
         self.config = self.load_config(config_path)
         self.on_message_callback = on_message_callback
-        self.generation = 0
         self.best_genome = None
         self.population = None
         self.stats = None
-        self.car_states = {}
         self.genomes = {}
         self.lock = asyncio.Lock()
         self.loop = asyncio.get_event_loop()
@@ -50,8 +48,6 @@ class NEATCarAI:
             self.shared_state["car_states"] = car_data
 
     def run_generation(self, genomes, config):
-        self.generation += 1
-        print(f'Start generation number {self.generation}. ')
         self.generation_termination_event.clear()
 
         setup_future = asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop)
@@ -76,7 +72,7 @@ class NEATCarAI:
         for _, genome in genomes:
             genome.fitness = 0
 
-        await self.on_message_callback(self.id, {'event': 'new_generation', 'data': {'number': self.generation, 'size': len(genomes)}})
+        await self.on_message_callback(self.id, {'event': 'new_generation', 'data': {'number': self.population.generation, 'size': len(genomes)}})
 
         timeout = 5
         start_time = time.time()
