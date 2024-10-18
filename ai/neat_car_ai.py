@@ -5,9 +5,10 @@ import time
 import pickle
 
 class NEATCarAI:
-    def __init__(self, config_path, socket):
+    def __init__(self, id_, config_path, on_message_callback):
+        self.id = id_
         self.config = self.load_config(config_path)
-        self.sio = socket
+        self.on_message_callback = on_message_callback
         self.generation = 0
         self.best_genome = None
         self.population = None
@@ -44,7 +45,7 @@ class NEATCarAI:
         except Exception as e:
             print(f"Error during NEAT run: {e}")
 
-    async def update_car_data(self, car_data, client_id):
+    async def update_car_data(self, car_data):
         async with self.lock:
             self.shared_state["car_states"] = car_data
 
@@ -75,7 +76,7 @@ class NEATCarAI:
         for _, genome in genomes:
             genome.fitness = 0
 
-        await self.sio.send_json({'event': 'new_generation', 'data': {'number': self.generation, 'size': len(genomes)}})
+        await self.on_message_callback(self.id, {'event': 'new_generation', 'data': {'number': self.generation, 'size': len(genomes)}})
 
         timeout = 5
         start_time = time.time()
@@ -94,7 +95,7 @@ class NEATCarAI:
                 for genome_id, id_ in enumerate(self.shared_state["car_states"].keys())
             }
         
-        await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
+        await self.on_message_callback(self.id, {'event': 'start', 'data': 'LETSGO'})
 
     async def process_car_data(self):
         interval = 0.05
@@ -196,7 +197,7 @@ class NEATCarAI:
         print('Inside clear_data.')
 
         try:
-            await self.sio.send_json({'event': 'stop', 'data': 'HALT'})
+            await self.on_message_callback(self.id, {'event': 'stop', 'data': 'HALT'})
             print('Sent HALT event to client.')
         except Exception as e:
             print(f"Error sending HALT event: {e}")
