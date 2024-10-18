@@ -16,10 +16,11 @@ class NEATCarAI:
         self.genomes = {}
         self.lock = asyncio.Lock()
         self.loop = asyncio.get_event_loop()
-    
-    @property
-    def id(self):
-        return self.sio.client.port
+        self.shared_state = {
+            "car_states": {},
+            "genomes": {}
+        }
+        self.generation_termination_event = asyncio.Event()
 
     def load_config(self, config_path):
         return neat.config.Config(
@@ -29,7 +30,7 @@ class NEATCarAI:
             neat.DefaultStagnation,
             config_path
         )
-    
+
     async def run(self, data):
         self.config.pop_size = data['generationSize']
         self.population = neat.Population(self.config)
@@ -38,39 +39,48 @@ class NEATCarAI:
         self.population.add_reporter(self.stats)
 
         try:
-            print(f"Starting NEAT run with {self.config.pop_size} population size for {data['numGenerations']} generations")
             self.best_genome = await asyncio.to_thread(self.population.run, self.run_generation, data['numGenerations'])
             self.save_best_genome('genome')
-            print("NEAT run complete.")
         except Exception as e:
             print(f"Error during NEAT run: {e}")
 
     async def update_car_data(self, car_data, client_id):
         async with self.lock:
-            self.car_states = car_data
+            self.shared_state["car_states"] = car_data
 
     def run_generation(self, genomes, config):
-        try:
-            setup_future = asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop)
-            setup_future.result()
-            action_future = asyncio.run_coroutine_threadsafe(self.pause_action(), self.loop)
-            action_future.result()
-            clear_future = asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop)
-            clear_future.result()
-        except Exception as e:
-            print(f"Error in run_generation: {e}")
+        self.generation += 1
+        print(f'Start generation number {self.generation}. ')
+        self.generation_termination_event.clear()
 
-    
+        setup_future = asyncio.run_coroutine_threadsafe(self.setup_data(genomes, config), self.loop)
+        setup_future.result()
+
+        tasks = [
+            asyncio.run_coroutine_threadsafe(self.process_car_data(), self.loop),
+            asyncio.run_coroutine_threadsafe(self.adjust_genome_fitness(), self.loop),
+            asyncio.run_coroutine_threadsafe(self.check_generation_end(), self.loop)
+        ]
+
+        termination_future = asyncio.run_coroutine_threadsafe(self.generation_termination_event.wait(), self.loop)
+        termination_future.result()
+
+        clear_future = asyncio.run_coroutine_threadsafe(self.clear_data(), self.loop)
+        clear_future.result()
+
+        for task in tasks:
+            task.cancel()
+
     async def setup_data(self, genomes, config):
         for _, genome in genomes:
             genome.fitness = 0
-        
-        await self.sio.send_json({'event': 'new_generation', 'data': len(genomes)})
-        
-        timeout = 5  # Timeout in seconds
+
+        await self.sio.send_json({'event': 'new_generation', 'data': {'number': self.generation, 'size': len(genomes)}})
+
+        timeout = 5
         start_time = time.time()
 
-        while not self.car_states:
+        while not self.shared_state["car_states"]:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Car states not received within the timeout period.")
             await asyncio.sleep(0.05)
@@ -81,54 +91,64 @@ class NEATCarAI:
                     'genome': genomes[genome_id][1],
                     'network': neat.nn.FeedForwardNetwork.create(genomes[genome_id][1], config)
                 }
-                for genome_id, id_ in enumerate(self.car_states.keys())
+                for genome_id, id_ in enumerate(self.shared_state["car_states"].keys())
             }
+        
         await self.sio.send_json({'event': 'start', 'data': 'LETSGO'})
-        print("Generation setup complete.")
-    
-    async def pause_action(self):
-        timeout = 40
-        interval = 0.018
-        time_threshold = 3
-        total_time = 0
 
-        while total_time < timeout:
-            start_time = time.time()
-
-            async with self.lock:
-                car_data = list(self.car_states.values())
+    async def process_car_data(self):
+        interval = 0.05
+        while not self.generation_termination_event.is_set():
+            car_data = list(self.shared_state["car_states"].values())
 
             if not car_data:
-                return  # Stop if no car data exists
+                await asyncio.sleep(interval)
+                continue
 
             actions = {}
-            staying = 0
-            for car_id, state in self.car_states.items():
-                if await self.evaluate_genome(car_id, state):
-                    actions[car_id] = await self.activate_car(car_id, state)
-                    if state['speed'] <= 0:
-                        staying += 1
-
-            if total_time > time_threshold and len(actions) == staying:
-                print('Stopping because all cars are stationary.')
-                return
+            for car_id, state in self.shared_state["car_states"].items():
+                action = await self.activate_car(car_id, state)
+                if action:
+                    actions[car_id] = action
 
             if actions:
-                await self.send_car_action(actions)
+                async with self.lock:
+                    self.shared_state["actions"] = actions
 
-            elapsed_time = time.time() - start_time
-            await asyncio.sleep(max(0, interval - elapsed_time))
-            total_time += interval
+            await asyncio.sleep(interval)
+        print('Exiting process_car_data...')
+
+    async def activate_car(self, car_id, state):
+        async with self.lock:
+            genome = self.genomes.get(car_id)
+
+        if not genome:
+            return [0, 0]
+
+        try:
+            inputs = [sensor['distance'] for sensor in state['sensors']] + [state['speed']]
+            action = genome['network'].activate(inputs)
+            return action
+        except Exception as e:
+            print(f"Error activating car {car_id}: {e}")
+            return [0, 0]
+
+    async def adjust_genome_fitness(self):
+        interval = 0.2
+        while not self.generation_termination_event.is_set():
+            for car_id, state in self.shared_state["car_states"].items():
+                await self.evaluate_genome(car_id, state)
+            await asyncio.sleep(interval)
 
     async def evaluate_genome(self, car_id, state):
         async with self.lock:
             car = self.genomes.get(car_id)
-        
+
         if not car:
             return False
-        
+
         fitness = car['genome'].fitness
-        
+
         if state['collision']:
             async with self.lock:
                 car['genome'].fitness = fitness - 50
@@ -144,60 +164,63 @@ class NEATCarAI:
         
         async with self.lock:
             car['genome'].fitness = fitness
-        
         return True
 
-    async def send_car_action(self, actions):
-        try:
-            await self.sio.send_json({
-                'event': 'car_action',
-                'data': actions
-            })
-        except Exception as e:
-            print(f"Error while sending actions: {e}")
+    async def check_generation_end(self):
+        timeout = 15
+        time_threshold = 3
+        interval = 0.2
+        total_time = 0
 
-    
+        while total_time < timeout:
+            car_data = list(self.shared_state["car_states"].values())
+            if not car_data:
+                print("No car data, exiting check_generation_end.")
+                return
+
+            staying = sum(state['speed'] <= 0 for state in car_data)
+
+            if total_time > time_threshold and staying == len(car_data):
+                print('All cars stationary, terminating generation.')
+                self.generation_termination_event.set()
+                return
+
+            await asyncio.sleep(interval)
+            total_time += interval
+
+        print('Timeout reached, terminating generation.')
+        self.generation_termination_event.set()
+
+
     async def clear_data(self):
-        await self.sio.send_json({'event': 'stop', 'data': 'HALT'})
+        print('Inside clear_data.')
+
+        try:
+            await self.sio.send_json({'event': 'stop', 'data': 'HALT'})
+            print('Sent HALT event to client.')
+        except Exception as e:
+            print(f"Error sending HALT event: {e}")
+
         await asyncio.sleep(0.1)
+
+        print('Attempting to acquire lock in clear_data...')
         async with self.lock:
             self.genomes.clear()
-            self.car_states.clear()
-    
-    async def activate_car(self, id_, state):
-        async with self.lock:
-            genome = self.genomes.get(id_)
-
-        if not genome:
-            return [0, 0]
-
-        try:
-            inputs = [sensor['distance'] for sensor in state['sensors']] + [state['speed']]
-            return genome['network'].activate(inputs)
-        except Exception as e:
-            print(f"Error while activating car {id_}: {e}")
-            return [0, 0]
+            self.shared_state["car_states"].clear()
 
     def save_best_genome(self, file_name):
         filepath = os.path.join(os.path.dirname(__file__), 'genomes', file_name)
         try:
             with open(filepath, 'wb') as f:
                 pickle.dump(self.best_genome, f)
-            print(f'Best genome saved to {filepath}')
         except Exception as e:
             print(f"Error saving best genome: {e}")
-    
+
     @staticmethod
     def load_best_genome(file_name):
-        filepath = os.path.join(os.path.dirname(__file__), 'genomes', file_name)
+        filepath = os.path.dirname(__file__), 'genomes', file_name
         try:
             with open(filepath, 'rb') as f:
                 return pickle.load(f)
-            print(f'Best genome loaded from {filepath}')
         except Exception as e:
             print(f"Error loading best genome: {e}")
-
-
-if __name__ == '__main__':
-    import json
-    print(json.dumps(NEATCarAI.load_best_genome('genome_5142')))

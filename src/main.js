@@ -33,7 +33,8 @@ if (trackConfig) {
 
 let socket = new Socket(
     'ws://localhost:8000/ws',
-    onSocketMessage
+    onSocketMessage,
+    onSocketClose
 );
 
 document.querySelector('#startRaceSidebar .close-btn').addEventListener('click', function() {
@@ -141,6 +142,7 @@ document.addEventListener('keyup', event => {
 
 function onSocketMessage(parsedMessage) {
     const { event, data } = parsedMessage;
+    // console.log('Received ' + event + ' message. ');
 
     if (event === 'new_generation') {
         startGeneration(data);
@@ -154,6 +156,11 @@ function onSocketMessage(parsedMessage) {
         track.clearTrack();
         raceStarted = false;
     }
+}
+
+function onSocketClose() {
+    raceStarted = false;
+    track.clearTrack();
 }
 
 async function loadAllConfigs() {
@@ -201,8 +208,8 @@ function loadNewTrack(configUrl) {
     track.setup(configUrl);
 }
 
-function startGeneration(n) {
-    startRace(n);
+function startGeneration(data) {
+    startRace(data.size);
 }
 
 function startRace(n) {

@@ -145,7 +145,7 @@ export class Track {
     clearTrack() {
         this.cars = [];
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        console.log('Track has been cleared.');
+        // console.log('Track has been cleared. ');
     }
 
     addCarToTrack(car) {

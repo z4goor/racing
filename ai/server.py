@@ -25,13 +25,12 @@ model_threads = {}
 
 async def handle_ping(websocket: WebSocket, data: str):
     await websocket.send_text(json.dumps({"event": "pong"}))
-    print("Ping event: Responded with pong")
 
 async def handle_message(websocket: WebSocket, data: str):
     await websocket.send_text(json.dumps({"event": "message", "data": f'Echoed: {data}'}))
-    print(f"Message event: Broadcasted message '{data}'")
 
 async def handle_model_init(websocket: WebSocket, data: str):
+    print('Received model init data. ')
     model_instance = NEATCarAI(CONFIG_PATH, socket=websocket)
     connected_clients[websocket] = model_instance
     
@@ -41,15 +40,24 @@ async def handle_model_init(websocket: WebSocket, data: str):
     model_thread = threading.Thread(target=model_thread_func, daemon=True)
     model_threads[websocket] = model_thread
     model_thread.start()
+    print('Model initialized. ')
     
     await websocket.send_json({'event': 'model_init', 'data': 'success'})
 
 async def handle_game_state(websocket: WebSocket, data: str):
     model_instance = connected_clients.get(websocket)
     if model_instance:
-        await asyncio.create_task(
-            model_instance.update_car_data(data, 'cipa')
-        )
+        await model_instance.update_car_data(data, 'cipa')
+        async with model_instance.lock:
+            actions = model_instance.shared_state.get("actions", {})
+
+        if actions:
+            await websocket.send_json({
+                'event': 'car_action',
+                'data': actions
+            })
+    else:
+        print('No model instance.')
 
 event_handlers = {
     "ping": handle_ping,

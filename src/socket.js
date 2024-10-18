@@ -1,12 +1,13 @@
 export class Socket {
-    constructor(url, onMessageCallback) {
+    constructor(url, onMessageCallback, onCloseCallback) {
         this.url = url;
         this.socket = null;
         this.onMessageCallback = onMessageCallback;
+        this.onCloseCallback = onCloseCallback;
     }
 
     isConnected() {
-        return Boolean(this.socket);
+        return Boolean(this.socket) && this.socket.readyState === WebSocket.OPEN;
     }
 
     connect() {
@@ -30,15 +31,18 @@ export class Socket {
 
             this.socket.onclose = () => {
                 console.log('Disconnected from WebSocket server');
+                this.socket = null;
             };
         });
     }
 
     send(event, data) {
-        if (this.isConnected() && this.socket.readyState === WebSocket.OPEN) {
+        // console.log("Sending " + event + " message. ");
+        if (this.isConnected()) {
             this.socket.send(JSON.stringify({ event, data }));
         } else {
-            console.error('WebSocket is not open.');
+            console.error('WebSocket is not open, cannot send message. ');
+            this.onCloseCallback();
         }
     }
 
