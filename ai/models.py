@@ -8,7 +8,7 @@ from neat_car_ai import NEATCarAI
 
 @dataclass
 class Client:
-    id_: str
+    id: str
     model: NEATCarAI
     socket: WebSocket
     thread: Thread
