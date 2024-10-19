@@ -151,6 +151,8 @@ function onSocketMessage(parsedMessage) {
     } else if (event === 'game_state') {
         sendGameStateToAI();
     } else if (event === 'start') {
+        document.getElementById('info-panel').style.display = 'block';
+        document.getElementById('current-generation').textContent = data.number + 1;
         raceStarted = true;
     } else if (event === 'stop') {
         track.clearTrack();

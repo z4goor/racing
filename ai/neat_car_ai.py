@@ -72,7 +72,7 @@ class NEATCarAI:
         for _, genome in genomes:
             genome.fitness = 0
 
-        await self.on_message_callback(self.id, {'event': 'new_generation', 'data': {'number': self.population.generation, 'size': len(genomes)}})
+        await self.on_message_callback(self.id, {'event': 'new_generation', 'data': {'size': len(genomes)}})
 
         timeout = 5
         start_time = time.time()
@@ -91,7 +91,7 @@ class NEATCarAI:
                 for genome_id, id_ in enumerate(self.shared_state["car_states"].keys())
             }
         
-        await self.on_message_callback(self.id, {'event': 'start', 'data': 'LETSGO'})
+        await self.on_message_callback(self.id, {'event': 'start', 'data': {'number': self.population.generation}})
 
     async def process_car_data(self):
         interval = 0.05
@@ -165,7 +165,7 @@ class NEATCarAI:
 
     async def check_generation_end(self):
         timeout = 15
-        time_threshold = 3
+        time_threshold = 2
         interval = 0.2
         total_time = 0
 
