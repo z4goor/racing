@@ -2,6 +2,7 @@ import { Car } from "./car.js";
 import { Track } from "./track.js";
 import { Timer } from './timer.js';
 import { Socket } from "./socket.js";
+import { InfoPanel } from './infoPanel.js';
 
 let controlledCar = null;
 let keysPressed = {};
@@ -23,6 +24,8 @@ const track = new Track(
     document.getElementById('track'),
     timer.fastestLap
 );
+
+const infoPanel = new InfoPanel(document.getElementById('info-panel'));
 
 const trackConfigUrl = await loadAllConfigs();
 if (trackConfig) {
@@ -83,8 +86,8 @@ document.getElementById('startRaceSubmitButton').addEventListener('click', async
         await socket.connect();
     }
 
+    infoPanel.setNumberOfGenerations(numGenerations);
     socket.send('model_init', { generationSize: parseInt(generationSize), numGenerations: parseInt(numGenerations) });
-
     startRaceSidebar.classList.remove('show');
 });
 
@@ -151,8 +154,8 @@ function onSocketMessage(parsedMessage) {
     } else if (event === 'game_state') {
         sendGameStateToAI();
     } else if (event === 'start') {
-        document.getElementById('info-panel').style.display = 'block';
-        document.getElementById('current-generation').textContent = data.number + 1;
+        infoPanel.updateGeneration(data.number + 1);
+        infoPanel.show();
         raceStarted = true;
     } else if (event === 'stop') {
         track.clearTrack();

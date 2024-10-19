@@ -94,7 +94,7 @@ class NEATCarAI:
         await self.on_message_callback(self.id, {'event': 'start', 'data': {'number': self.population.generation}})
 
     async def process_car_data(self):
-        interval = 0.05
+        interval = 0.02
         while not self.generation_termination_event.is_set():
             car_data = list(self.shared_state["car_states"].values())
 
