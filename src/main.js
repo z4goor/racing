@@ -3,6 +3,8 @@ import { Track } from "./track.js";
 import { Timer } from './timer.js';
 import { Socket } from "./socket.js";
 import { InfoPanel } from './infoPanel.js';
+import { TrackSidebar } from './trackSidebar.js';
+import { Menu } from './menu.js';
 
 let controlledCar = null;
 let keysPressed = {};
@@ -12,8 +14,7 @@ const startRaceSidebar = document.getElementById('startRaceSidebar');
 const trackSidebar = document.getElementById('trackSidebar');
 const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
 const showCornersCheckbox = document.getElementById('showCornersCheckbox');
-const trackConfig = localStorage.getItem('trackConfig');
-const configsFolder = '../config';
+
 
 const timer = new Timer(
     document.getElementById('current-time'),
@@ -25,14 +26,9 @@ const track = new Track(
     timer.fastestLap
 );
 
+const trackSidebarV2 = new TrackSidebar(document.getElementById('trackSidebar'), track, resetCars);
+trackSidebarV2.initialize();
 const infoPanel = new InfoPanel(document.getElementById('info-panel'));
-
-const trackConfigUrl = await loadAllConfigs();
-if (trackConfig) {
-    track.setup(trackConfig);
-} else {
-    track.setup(trackConfigUrl);
-}
 
 let socket = new Socket(
     'ws://localhost:8000/ws',
@@ -166,51 +162,6 @@ function onSocketMessage(parsedMessage) {
 function onSocketClose() {
     raceStarted = false;
     track.clearTrack();
-}
-
-async function loadAllConfigs() {
-    try {
-        const response = await fetch(`${configsFolder}/config_list.json`);
-        const configFiles = await response.json();
-
-        const trackConfigs = await Promise.all(
-            configFiles.map(async (configFile) => {
-                const configResponse = await fetch(`${configsFolder}/${configFile}`);
-                const configData = await configResponse.json();
-                return {
-                    configUrl: `${configsFolder}/${configFile}`,
-                    imageUrl: configData.imageUrl
-                };
-            })
-        );
-
-        loadTrackImages(trackConfigs);
-        return trackConfigs[0].configUrl;
-    } catch (error) {
-        console.error("Error loading configs:", error);
-        return null;
-    }
-}
-
-function loadTrackImages(trackConfigs) {
-    const trackImagesContainer = document.getElementById('track-images');
-    trackImagesContainer.innerHTML = '';
-
-    trackConfigs.forEach(trackConfig => {
-        const imgElement = document.createElement('img');
-        imgElement.src = trackConfig.imageUrl;
-        imgElement.alt = trackConfig.name;
-        imgElement.addEventListener('click', () => {
-            loadNewTrack(trackConfig.configUrl);
-        });
-        trackImagesContainer.appendChild(imgElement);
-    });
-}
-
-function loadNewTrack(configUrl) {
-    localStorage.setItem('trackConfig', configUrl);
-    resetCars();
-    track.setup(configUrl);
 }
 
 function startGeneration(data) {
