@@ -3,18 +3,12 @@ import { Track } from "./track.js";
 import { Timer } from './timer.js';
 import { Socket } from "./socket.js";
 import { InfoPanel } from './infoPanel.js';
+import { AiTrainingSidebar } from './aiTrainingSidebar.js';
 import { TrackSidebar } from './trackSidebar.js';
-import { Menu } from './menu.js';
 
 let controlledCar = null;
 let keysPressed = {};
 let raceStarted = false;
-
-const startRaceSidebar = document.getElementById('startRaceSidebar');
-const trackSidebar = document.getElementById('trackSidebar');
-const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
-const showCornersCheckbox = document.getElementById('showCornersCheckbox');
-
 
 const timer = new Timer(
     document.getElementById('current-time'),
@@ -26,23 +20,17 @@ const track = new Track(
     timer.fastestLap
 );
 
-const trackSidebarV2 = new TrackSidebar(document.getElementById('trackSidebar'), track, resetCars);
-trackSidebarV2.initialize();
-const infoPanel = new InfoPanel(document.getElementById('info-panel'));
-
 let socket = new Socket(
     'ws://localhost:8000/ws',
     onSocketMessage,
     onSocketClose
 );
 
-document.querySelector('#startRaceSidebar .close-btn').addEventListener('click', function() {
-    startRaceSidebar.classList.remove('show');
-});
-
-document.querySelector('#trackSidebar .close-btn').addEventListener('click', function() {
-    trackSidebar.classList.remove('show');
-});
+const aiTrainingSidebar = await AiTrainingSidebar.create(document.getElementById('aiTrainingSidebar'), startTraining);
+const trackSidebar = await TrackSidebar.create(document.getElementById('trackSidebar'), track, resetCars);
+const infoPanel = new InfoPanel(document.getElementById('info-panel'));
+const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
+const showCornersCheckbox = document.getElementById('showCornersCheckbox');
 
 document.getElementById('addHumanButton').addEventListener('click', function() {
     if (controlledCar) return;
@@ -70,25 +58,12 @@ document.getElementById('resetFastestLapButton').addEventListener('click', funct
     track.fastestLap = null;
 });
 
-document.getElementById('startRaceButton').addEventListener('click', function() {
-    startRaceSidebar.classList.toggle('show');
-});
-
-document.getElementById('startRaceSubmitButton').addEventListener('click', async function() {
-    const generationSize = document.getElementById('generationSize').value;
-    const numGenerations = document.getElementById('numGenerations').value;
-
-    if (!socket.isConnected()) {
-        await socket.connect();
-    }
-
-    infoPanel.setNumberOfGenerations(numGenerations);
-    socket.send('model_init', { generationSize: parseInt(generationSize), numGenerations: parseInt(numGenerations) });
-    startRaceSidebar.classList.remove('show');
+document.getElementById('aiTrainingButton').addEventListener('click', function() {
+    aiTrainingSidebar.toggle();
 });
 
 document.getElementById('changeTrackButton').addEventListener('click', function() {
-    trackSidebar.classList.toggle('show');
+    trackSidebar.toggle();
 });
 
 document.addEventListener('keydown', event => {
@@ -151,7 +126,6 @@ function onSocketMessage(parsedMessage) {
         sendGameStateToAI();
     } else if (event === 'start') {
         infoPanel.updateGeneration(data.number + 1);
-        infoPanel.show();
         raceStarted = true;
     } else if (event === 'stop') {
         track.clearTrack();
@@ -164,13 +138,19 @@ function onSocketClose() {
     track.clearTrack();
 }
 
-function startGeneration(data) {
-    startRace(data.size);
+async function startTraining(size, length) {
+    if (!socket.isConnected()) {
+        await socket.connect();
+    }
+    infoPanel.show();
+    infoPanel.setNumberOfGenerations(length);
+    socket.send('model_init', { generationSize: parseInt(size), numGenerations: parseInt(length) });
+    aiTrainingSidebar.toggle();
 }
 
-function startRace(n) {
+function startGeneration(data) {
     track.clearTrack()
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < data.size; i++) {
         addNewAICar();
     }
     sendGameStateToAI();

@@ -7,13 +7,30 @@ export class TrackSidebar {
         this.resetCallback = resetCallback;
     }
 
+    get closeButton() {
+        return this.element.querySelector('.close-btn');
+    }
+
+    static async create(trackSidebarElement, track, resetCallback) {
+        const instance = new TrackSidebar(trackSidebarElement, track, resetCallback);
+        await instance.initialize();
+        return instance;
+    }
+
     async initialize() {
+        this.closeButton.addEventListener('click', () => {
+            this.toggle();
+        });
         const trackConfigUrl = await this.loadAllConfigs();
         if (this.trackConfig) {
             this.track.setup(this.trackConfig);
         } else {
             this.track.setup(trackConfigUrl);
         }
+    }
+
+    toggle() {
+        this.element.classList.toggle('show');
     }
 
     async loadAllConfigs() {
