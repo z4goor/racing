@@ -27,10 +27,8 @@ async def global_message_callback(model_id: str, message: dict):
     client = next((c for c in connected_clients.values() if c.id == model_id), None)
     if not client:
         return
-    
-    websocket = client.socket
     try:
-        await websocket.send_json(message)
+        await client.socket.send_json(message)
     except Exception as e:
         print(f"Error sending message to WebSocket for model {model_id}: {e}")
 

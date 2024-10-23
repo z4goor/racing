@@ -56,6 +56,7 @@ class NEATCarAI:
         tasks = [
             asyncio.run_coroutine_threadsafe(self.process_car_data(), self.loop),
             asyncio.run_coroutine_threadsafe(self.adjust_genome_fitness(), self.loop),
+            asyncio.run_coroutine_threadsafe(self.send_stats(), self.loop),
             asyncio.run_coroutine_threadsafe(self.check_generation_end(), self.loop)
         ]
 
@@ -162,6 +163,16 @@ class NEATCarAI:
         async with self.lock:
             car['genome'].fitness = fitness
         return True
+    
+    async def send_stats(self):
+        interval = 0.1
+        await asyncio.sleep(interval * 3)
+        while not self.generation_termination_event.is_set():
+            async with self.lock:
+                sorted_genomes = sorted(self.genomes.items(), key=lambda item: item[1]['genome'].fitness, reverse=True)[:3]
+                car_data = {id_: data['genome'].fitness for id_, data in sorted_genomes}
+            await self.on_message_callback(self.id, {'event': 'stats', 'data': car_data})
+            await asyncio.sleep(interval)
 
     async def check_generation_end(self):
         timeout = 15
