@@ -6,24 +6,23 @@ import { InfoPanel } from './infoPanel.js';
 import { AiTrainingSidebar } from './aiTrainingSidebar.js';
 import { TrackSidebar } from './trackSidebar.js';
 
-let controlledCar = null;
 let keysPressed = {};
-let raceStarted = false;
 
 const timer = new Timer(
     document.getElementById('current-time'),
     document.getElementById('fastest-time')
 );
 
-const track = new Track(
-    document.getElementById('track'),
-    timer.fastestLap
-);
-
 let socket = new Socket(
     'ws://localhost:8000/ws',
     onSocketMessage,
     onSocketClose
+);
+
+const track = new Track(
+    document.getElementById('track'),
+    timer.fastestLap,
+    socket
 );
 
 const aiTrainingSidebar = await AiTrainingSidebar.create(document.getElementById('aiTrainingSidebar'), startTraining);
@@ -33,10 +32,10 @@ const showSensorsCheckbox = document.getElementById('showSensorsCheckbox');
 const showCornersCheckbox = document.getElementById('showCornersCheckbox');
 
 document.getElementById('addHumanButton').addEventListener('click', function() {
-    if (controlledCar) return;
+    if (track.controlledCar) return;
     const car = new Car(15, 25, '#ffa12d', true);
     track.addCarToTrack(car);
-    controlledCar = car;
+    track.controlledCar = car;
 });
 
 document.getElementById('addAIButton').addEventListener('click', function() {
@@ -45,8 +44,8 @@ document.getElementById('addAIButton').addEventListener('click', function() {
 });
 
 document.getElementById('restartHumanButton').addEventListener('click', function() {
-    if (!controlledCar) return;
-    track.restartCar(controlledCar);
+    if (!track.controlledCar) return;
+    track.restartCar(track.controlledCar);
 });
 
 document.getElementById('removeCarsButton').addEventListener('click', function() {
@@ -81,19 +80,19 @@ document.addEventListener('keydown', event => {
             break;
     }
 
-    if (!controlledCar) return;
+    if (!track.controlledCar) return;
     switch (event.code) {
         case 'KeyW':
-            controlledCar.increaseSpeed(0.6);
+            track.controlledCar.increaseSpeed(0.6);
             break;
         case 'KeyA':
-            controlledCar.setRotationSpeed(-4.3);
+            track.controlledCar.setRotationSpeed(-4.3);
             break;
         case 'KeyS':
-            controlledCar.decreaseSpeed(0.8);
+            track.controlledCar.decreaseSpeed(0.8);
             break;
         case 'KeyD':
-            controlledCar.setRotationSpeed(4.3);
+            track.controlledCar.setRotationSpeed(4.3);
             break;
         case 'KeyX':
             showSensorsCheckbox.checked = !showSensorsCheckbox.checked;
@@ -102,15 +101,15 @@ document.addEventListener('keydown', event => {
             showCornersCheckbox.checked = !showCornersCheckbox.checked;
             break;
         case 'Space':
-            controlledCar.x -= 200;
+            track.controlledCar.x -= 200;
             break;
     }
 });
 
 document.addEventListener('keyup', event => {
     keysPressed[event.code] = false;
-    if (controlledCar && (event.code === 'KeyA' || event.code === 'KeyD')) {
-        controlledCar.setRotationSpeed(0);
+    if (track.controlledCar && (event.code === 'KeyA' || event.code === 'KeyD')) {
+        track.controlledCar.setRotationSpeed(0);
     }
 });
 
@@ -125,16 +124,20 @@ function onSocketMessage(parsedMessage) {
     } else if (event === 'game_state') {
         sendGameStateToAI();
     } else if (event === 'start') {
-        infoPanel.updateGeneration(data.number + 1);
-        raceStarted = true;
+        infoPanel.updateGenerationNumber(data.number + 1);
+        track.raceStarted = true;
     } else if (event === 'stop') {
         track.clearTrack();
-        raceStarted = false;
+        track.raceStarted = false;
+    } else if (event === 'stats') {
+        infoPanel.updateStats(data);
+    } else {
+        console.log('Unknown message', event, data);
     }
 }
 
 function onSocketClose() {
-    raceStarted = false;
+    track.raceStarted = false;
     track.clearTrack();
 }
 
@@ -153,7 +156,7 @@ function startGeneration(data) {
     for (let i = 0; i < data.size; i++) {
         addNewAICar();
     }
-    sendGameStateToAI();
+    track.raceStarted = true;
 }
 
 function addNewAICar() {
@@ -163,14 +166,8 @@ function addNewAICar() {
 
 function resetCars() {
     track.clearTrack();
-    controlledCar = null;
-    raceStarted = false;
-}
-
-function sendGameStateToAI() {
-    // console.time('sending');
-    socket.send('game_state', track.getCarData(true));
-    // console.timeEnd('sending');
+    track.controlledCar = null;
+    track.raceStarted = false;
 }
 
 function applyAIAction(actions) {
@@ -196,14 +193,9 @@ function applyAIAction(actions) {
 
 function update() {
     track.update();
-    if (raceStarted) {
-        sendGameStateToAI();
-    }
-
     if (showSensorsCheckbox.checked) track.drawSensors();
     if (showCornersCheckbox.checked) track.drawCorners();
-
-    timer.update(controlledCar, track);
+    timer.update(track.controlledCar, track);
 
     requestAnimationFrame(update);
 }

@@ -1,7 +1,8 @@
 export class Track {
-    constructor(trackElement, fastestLapTime) {
+    constructor(trackElement, fastestLapTime, socket) {
         this.trackElement = trackElement;
         this.fastestLap = fastestLapTime;
+        this.socket = socket;
         this.canvas = document.createElement('canvas');
         this.context = this.canvas.getContext('2d', { willReadFrequently: true });
         this.image = new Image();
@@ -10,6 +11,8 @@ export class Track {
         this.initialRotation = null;
         this.array = null;
         this.cars = [];
+        this.controlledCar = null;
+        this.raceStarted = false;
     }
 
     async setup(configUrl) {
@@ -91,6 +94,16 @@ export class Track {
             this.updateCarSensors(car);
             this.drawCar(car);
         });
+        
+        if (this.raceStarted) {
+            this.sendGameStateToAI();
+        }
+    }
+
+    sendGameStateToAI() {
+        // console.time('sending');
+        this.socket.send('game_state', this.getCarData(true));
+        // console.timeEnd('sending');
     }
 
     moveCar(car) {
